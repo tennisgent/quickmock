@@ -2,7 +2,7 @@
 
 	angular.module('QuickMockDemo', [])
 
-		.service('APIService', ['$http', '$q', function($http, $q){
+		.service('APIService', ['$http', function($http){
 			var api_url = 'http://api.someurl.com';
 			return {
 				get: function(url){

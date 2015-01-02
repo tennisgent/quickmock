@@ -74,7 +74,7 @@
 				}else if(injector.has(mockPrefix + dep)){
 					mocks[dep] = injector.get(mockPrefix + dep);
 				}else{
-					throw new Error('QuickMock: Tried to inject mock for "' + dep + '" but no such mock exists. Please create one and try again.');
+					throw new Error('QuickMock: Tried to inject mock for "' + dep + '" but no such mock exists. Please create one called "' + mockPrefix + dep + '" and try again.');
 				}
 			}
 		});
@@ -84,7 +84,7 @@
 	function spyOnProviderMethods(provider){
 		angular.forEach(provider, function(property, propertyName){
 			if(typeof property === 'function'){
-				spyOn(provider, propertyName).andCallThrough();
+				spyOn(provider, propertyName).and.callThrough();
 			}
 		});
 	}
@@ -97,7 +97,7 @@
 	var argIndex = 2,
 		nameIndex = 0,
 		dependencyListIndex = 1,
-		mockPrefix = 'mock_';
+		mockPrefix = '___';
 
 	QuickMock.MOCK_PREFIX = mockPrefix;
 	QuickMock.USE_ACTUAL = 'USE_ACTUAL_IMPLEMENTATION';

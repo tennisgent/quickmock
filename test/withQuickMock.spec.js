@@ -1,9 +1,4 @@
-console.log('test');
-
 describe('QuickMockDemoTests', function () {
-
-	console.log('test');
-
 
 	describe('APIService', function () {
 		var apiService;
@@ -11,13 +6,14 @@ describe('QuickMockDemoTests', function () {
 		beforeEach(function(){
 		    apiService = QuickMock({
 				providerName: 'APIService',
-				moduleName: 'QuickMockDemo'
+				moduleName: 'QuickMockDemo',
+				mockModules: ['QuickMockDemoMocks']
 			});
 		});
 
 
 		it('should exists', function(){
-			expect(apiService).toBeDefined();
+			expect(apiService.get).toBeDefined();
 		});
 
 	});
