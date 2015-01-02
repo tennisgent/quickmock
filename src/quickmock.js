@@ -110,7 +110,9 @@
 	        return (pos ? separator : '') + letter.toLowerCase();
 	    });
 	}
-	/* End plaigerism */
+	/* End plaigarism */
+
+	window.QuickMock = QuickMock;
 
 	return QuickMock;
 	
