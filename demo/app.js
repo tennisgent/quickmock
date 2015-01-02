@@ -1,6 +1,6 @@
-define(['angular', 'lodash'], function (angular, _) {
+(function () {
 
-	return angular.module('documentCentral.services.DocumentRequestService', [])
+	angular.module('QuickMockDemo', [])
 
 		.value('DocumentRequestDialogIDs', {
 			cancelDialog: 'at-document-request-cancel-request-dialog',
@@ -72,4 +72,4 @@ define(['angular', 'lodash'], function (angular, _) {
 				};
 
 			}]);
-});
+})();
