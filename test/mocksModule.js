@@ -56,4 +56,8 @@
 			return spy;
 		}])
 
+		.factory('___NotificationService', [function(){
+			return jasmine.createSpyObj('NotificationService', ['error','success','warning','basic','confirm']);
+		}])
+
 })();

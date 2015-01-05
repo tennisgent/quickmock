@@ -1,5 +1,7 @@
 (function(angular){
 
+	var opts;
+
 	function QuickMock(options){
 		if(!options.moduleName){
 			throw new Error('QuickMock: No moduleName given. You must give the name of the module that contains the provider you wish to test.');
@@ -7,34 +9,35 @@
 		if(!options.providerName){
 			throw new Error('QuickMock: No providerName given. You must give the name of the provider you wish to test.');
 		}
-		if(options.mockModules){
-			angular.forEach(options.mockModules, function(mockMod){
-				angular.module(mockMod);
-			});
-		}
 
-		return mockProvider(options.moduleName, options.providerName, options.mockModules || [], options.mocks || {});
+		angular.forEach(options.mockModules = (options.mockModules || []), function(mockMod){
+			angular.module(mockMod);
+		});
+
+		opts = options;
+
+		return mockProvider();
 	}
 
-	function mockProvider(moduleName, providerName, mockModules, overrideMocks){
-
-		var allModules = ['ngMock', moduleName].concat(mockModules),
+	function mockProvider(){
+		var allModules = ['ngMock', opts.moduleName].concat(opts.mockModules),
 			injector = angular.injector(allModules),
 			$controller = injector.get('$controller'),
-			invokeQueue = angular.module(moduleName)._invokeQueue,
-			providerType = getProviderType(providerName, invokeQueue);
+			$compile = injector.get('$compile'),
+			invokeQueue = angular.module(opts.moduleName)._invokeQueue,
+			providerType = getProviderType(opts.providerName, invokeQueue);
 
-		if(!injector.has(providerName) && providerType !== 'controller'){
-			throw new Error('QuickMock: Cannot get mocks for "' + providerName + '" because no such provider exists');
+		if(!injector.has(opts.providerName) && providerType !== 'controller' && providerType !== 'directive'){
+			throw new Error('QuickMock: Cannot get mocks for "' + opts.providerName + '" because no such provider exists');
 		}
 
-		var dependencies = getProviderDependenciesFromInvokeQueue(providerName, invokeQueue),
-			mocks = injectMocksForDependencies(injector, dependencies, overrideMocks, providerType),
-			provider;
+		var dependencies = getProviderDependenciesFromInvokeQueue(opts.providerName, invokeQueue),
+			mocks = injectMocksForDependencies(injector, dependencies, providerType, allModules),
+			provider = {};
 
 		function initializeProvider(){
 			return (providerType === 'controller')
-				? $controller(providerName, mocks)
+				? $controller(opts.providerName, mocks)
 				: injector.invoke(dependencies, this, mocks);
 		}
 
@@ -50,7 +53,24 @@
 			return provider;
 		}
 
-		setupInitializer();
+		function setupDirective(){
+			provider.$scope = injector.get('$rootScope').$new();
+			provider.$mocks = mocks;
+			provider.$compile = function(html){
+				if(!html && !opts.html){
+					throw new Error('QuickMock: Cannot compile "' + opts.providerName + '" directive. No html string provided.');
+				}
+				provider.$element = angular.element(html || opts.html);
+				$compile(provider.$element)(provider.$scope);
+				provider.$scope.$digest();
+			};
+		}
+
+		if(providerType === 'directive'){
+			setupDirective();
+		}else{
+			setupInitializer();
+		}
 
 		return provider;
 	}
@@ -65,28 +85,34 @@
 		return dependencies;
 	}
 
-	function injectMocksForDependencies(injector, dependencies, override, type){
+	function injectMocksForDependencies(injector, dependencies, type, mods){
 		var mocks = {};
+
 		angular.forEach(dependencies, function(dep){
 			if(typeof dep === 'string'){
-				if(override[dep] === QuickMock.USE_ACTUAL){
-					if(injector.has(dep)){
-						mocks[dep] = injector.get(dep);
-					}else{
-						throw new Error('QuickMock: Cannot use actual "' + dep + '" provider because it is not available.');
-					}
-				}else if(override[dep]){
-					mocks[dep] = override[dep];
-				}else if(injector.has(mockPrefix + dep)){
-					mocks[dep] = injector.get(mockPrefix + dep);
-				}else if(type && (type === 'value' || type === 'constant') && injector.has(dep)){
-					mocks[dep] = injector.get(mockPrefix + dep);
-				}else{
-					throw new Error('QuickMock: Tried to inject mock for "' + dep + '" but no such mock exists. Please create one called "' + mockPrefix + dep + '" and try again.');
-				}
+				mocks[dep] = getMockForService(dep, injector, type);
 			}
 		});
+
 		return mocks;
+	}
+
+	function getMockForService(serviceName, injector, type){
+		if(opts.mocks && opts.mocks[serviceName] === QuickMock.USE_ACTUAL){
+			if(injector.has(serviceName)){
+				return injector.get(serviceName);
+			}else{
+				throw new Error('QuickMock: Cannot use actual "' + serviceName + '" provider because it is not available.');
+			}
+		}else if(opts.mocks && opts.mocks[serviceName]){
+			return opts.mocks[serviceName];
+		}else if(injector.has(mockPrefix + serviceName)){
+			return injector.get(mockPrefix + serviceName);
+		}else if(type && (type === 'value' || type === 'constant') && injector.has(serviceName)){
+			return injector.get(mockPrefix + serviceName);
+		}else{
+			throw new Error('QuickMock: Tried to inject mock for "' + serviceName + '" but no such mock exists. Please create one called "' + mockPrefix + serviceName + '" and try again.');
+		}
 	}
 
 	function spyOnProviderMethods(provider){
@@ -110,6 +136,8 @@
 					return providerInfo[1];
 				else if(providerInfo[0] === '$controllerProvider')
 					return 'controller';
+				else if(providerInfo[0] === '$compileProvider')
+					return 'directive';
 			}
 		}
 		return 'unknown';

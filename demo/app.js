@@ -86,37 +86,59 @@
 			};
 		}])
 
-		.controller('FormController', ['$scope', 'APIService', 'UserFormValidator', function($scope, APIService, UserFormValidator){
+		.controller('FormController', ['$scope', 'APIService', 'UserFormValidator', 'NotificationService',
+			function($scope, APIService, UserFormValidator, NotificationService){
 
-			$scope.user = null;
-			$scope.edit = false;
+				$scope.user = null;
+				$scope.edit = false;
 
-			APIService.get('/user/me').then(function(data){
-				$scope.user = data;
-			});
+				APIService.get('/user/me').then(function(data){
+					$scope.user = data;
+				});
 
-			$scope.toggleEditUser = function(){
-				$scope.edit = !$scope.edit;
-			};
+				$scope.toggleEditUser = function(){
+					$scope.edit = !$scope.edit;
+				};
 
-			$scope.saveUser = function(){
-				var user = $scope.user,
-					verify = UserFormValidator(user);
-				if(verify.isValid){
-					APIService.put('/user/me').then(function(){
-						NotificationService.success('User was saved successfully');
-					})
-				}else{
-					angular.forEach(verify.messages, function(msg){
-						NotificationService.error(msg);
-					});
+				$scope.saveUser = function(){
+					var user = $scope.user,
+						verify = UserFormValidator(user);
+					if(verify.isValid){
+						APIService.put('/user/me').then(function(){
+							NotificationService.success('User was saved successfully');
+						})
+					}else{
+						angular.forEach(verify.messages, function(msg){
+							NotificationService.error(msg);
+						});
+					}
 				}
+
 			}
+		])
 
-		}])
+		.directive('zbToggle', ['NotificationService', function(NotificationService){
+			return {
+				restrict: 'AE',
+				replace: true,
+				transclude: true,
+				template: '<div class="toggle" ng-click="check = !check">'
+					+ '<input type="checkbox" ng-model="check">'
+					+ '<span ng-transclude></span>'
+					+ '</div>',
+				link: function(scope, elem, attrs){
 
-		.directive('zbToggle', [function(){
+					var notificationMessage = 'Your preference has been set to: ';
 
+					scope.check = false;
+
+					scope.$watch('check', function(val){
+						console.log('check watch called', val);
+						NotificationService[val ? 'success' : 'warning'](notificationMessage + val);
+					});
+
+				}
+			};
 		}])
 
 })();
