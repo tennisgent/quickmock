@@ -8,7 +8,7 @@
 				angular.forEach(['then','catch','finally'], function(method){
 					promise[method] = jasmine.createSpy('$promise.' + method);
 					promise[method].callback = function(argument){
-						promise[method].mostRecentCall.args[0](argument);
+						promise[method].calls.mostRecent().args[0](argument);
 					};
 				});
 			};
@@ -20,11 +20,11 @@
 				angular.forEach(['success','error'], function(method){
 					promise[method] = jasmine.createSpy('$promise.' + method);
 					promise[method].callback = function(argument){
-						promise[method].mostRecentCall.args[0](argument);
+						promise[method].calls.mostRecent().args[0](argument);
 					};
 				});
 			}
-			MockHttpPromise.prototype = MockPromise;
+			MockHttpPromise.prototype = new MockPromise();
 			return MockHttpPromise;
 		}])
 
@@ -33,9 +33,27 @@
 				spyObj = jasmine.createSpyObj('$http', methods);
 			angular.forEach(methods, function(method){
 				spyObj[method].calls.mostRecentPromise = new MockHttpPromise();
-				spyObj[method].and.returnValue({$promise: spyObj[method].calls.mostRecentPromise});
+				spyObj[method].and.returnValue(spyObj[method].calls.mostRecentPromise);
 			});
 			return spyObj;
+		}])
+
+		.factory('___$window', [function() {
+			return jasmine.createSpyObj('$window', ['alert','confirm']);
+		}])
+
+		.factory('___$scope', ['$rootScope', function($rootScope){
+			return $rootScope.$new();
+		}])
+
+		.factory('___APIService', ['___$http', function(mockHttp){
+			return mockHttp;
+		}])
+
+		.factory('___UserFormValidator', [function(){
+			var spy = jasmine.createSpy('UserFormValidator');
+			spy.and.returnValue(true);
+			return spy;
 		}])
 
 })();

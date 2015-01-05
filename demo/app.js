@@ -28,71 +28,81 @@
 			urlInvalid: 'Website URL must be valid. Please check it and try again.'
 		})
 
-		.factory('UserFormValidator', ['InvalidFormMessages', function(msg){
-			var PASSWORD_REGEX = /^[a-zA-Z0-9_-]{6,18}$/,
-				EMAIL_REGEX = /^([a-z0-9_\.-]+)@([\da-z\.-]+)\.([a-z\.]{2,6})$/,
-				URL_REGEX = /^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$/;
+		.value('UserRegex', {
+			password: /^[a-zA-Z0-9_-]{6,18}$/,
+			email: /^([a-z0-9_\.-]+)@([\da-z\.-]+)\.([a-z\.]{2,6})$/,
+			url: /^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$/
+		})
 
+		.factory('UserFormValidator', ['InvalidUserFormMessages', 'UserRegex', function(msg, regex){
 			return function(user){
-				var response = {valid: false, messages: []};
-				if(!user) return response;
-				if(!user.email || !user.email.length || !user.email.match(EMAIL_REGEX)){
+				var response = {isValid: false, messages: []};
+				if(!user || angular.equals(user, {})) return response;
+				if(!user.email || !user.email.length || !user.email.match(regex.email)){
 					response.messages.push(msg.emailInvalid);
 				}
 				if(!user.password || !user.password.length || user.password.length < 8){
 					response.messages.push(msg.passwordLength);
 				}
-				if(!user.password.match(PASSWORD_REGEX)){
+				if(!user.password.match(regex.password)){
 					response.messages.push(msg.passwordInvalid);
 				}
 				if(user.password !== user.passwordConfirm){
 					response.messages.push(msg.passwordsDontMatch);
 				}
-				if(user.password !== user.passwordConfirm){
-					response.messages.push(msg.passwordsDontMatch);
-				}
-				if(user.website && !user.website.match(URL_REGEX)){
+				if(user.website && !user.website.match(regex.url)){
 					response.messages.push(msg.urlInvalid);
 				}
-				response.valid = !response.messages.length;
+				response.isValid = !response.messages.length;
 				return response;
 			};
 		}])
 
-		.service('NotificationService', ['$log', '$window', function($log, $window){
+		.value('NotificationTitles', {
+			error: 'It looks like something went wrong...',
+			success: 'Congraduations!',
+			warning: 'Be careful...',
+			basic: 'Check this out!',
+			confirm: 'Confirm Action'
+		})
+
+		.service('NotificationService', ['$window', 'NotificationTitles', function($window, titles){
 			return {
 				error: function(msg){
-					$window.alert('It looks like something went wrong\n\n' + msg);
+					$window.alert(titles.error + '\n\n' + msg);
 				},
 				success: function(msg){
-					$window.alert('Congraduations!\n\n' + msg);
+					$window.alert(titles.success + '\n\n' + msg);
 				},
 				warning: function(msg){
-					$window.alert('Be Careful...\n\n' + msg);
+					$window.alert(titles.warning + '\n\n' + msg);
 				},
 				basic: function(msg){
-					$window.alert('Check this out!\n\n' + msg);
+					$window.alert(titles.basic + '\n\n' + msg);
 				},
 				confirm: function(msg){
-					return $window.confirm('Confirm Action\n\n' + msg);
+					return $window.confirm(titles.confirm + '\n\n' + msg);
 				}
 			};
 		}])
 
 		.controller('FormController', ['$scope', 'APIService', 'UserFormValidator', function($scope, APIService, UserFormValidator){
 
+			$scope.user = null;
+			$scope.edit = false;
+
 			APIService.get('/user/me').then(function(data){
 				$scope.user = data;
 			});
 
-			$scope.editUser = function(){
+			$scope.toggleEditUser = function(){
 				$scope.edit = !$scope.edit;
 			};
 
 			$scope.saveUser = function(){
 				var user = $scope.user,
 					verify = UserFormValidator(user);
-				if(verify.valid){
+				if(verify.isValid){
 					APIService.put('/user/me').then(function(){
 						NotificationService.success('User was saved successfully');
 					})
@@ -102,6 +112,10 @@
 					});
 				}
 			}
+
+		}])
+
+		.directive('zbToggle', [function(){
 
 		}])
 

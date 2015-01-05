@@ -20,28 +20,34 @@
 
 		var allModules = ['ngMock', moduleName].concat(mockModules),
 			injector = angular.injector(allModules),
+			$controller = injector.get('$controller'),
 			invokeQueue = angular.module(moduleName)._invokeQueue,
-			dependencies = [],
-			mocks = {};
+			providerType = getProviderType(providerName, invokeQueue);
 
-		if(!injector.has(providerName)){
-			throw new Error('Cannot get mocks for "' + providerName + '" because no such provider exists');
+		if(!injector.has(providerName) && providerType !== 'controller'){
+			throw new Error('QuickMock: Cannot get mocks for "' + providerName + '" because no such provider exists');
 		}
 
-		dependencies = getProviderDependenciesFromInvokeQueue(providerName, invokeQueue);
+		var dependencies = getProviderDependenciesFromInvokeQueue(providerName, invokeQueue),
+			mocks = injectMocksForDependencies(injector, dependencies, overrideMocks, providerType),
+			provider;
 
-		mocks = injectMocksForDependencies(injector, dependencies, overrideMocks);
-
-		var provider = injector.invoke(dependencies, this, mocks);
-		spyOnProviderMethods(provider);
+		function initializeProvider(){
+			return (providerType === 'controller')
+				? $controller(providerName, mocks)
+				: injector.invoke(dependencies, this, mocks);
+		}
 
 		function setupInitializer(){
-			provider.$initialize = function(){
-				provider = injector.invoke(dependencies, this, mocks);
-				spyOnProviderMethods(provider);
-				setupInitializer();
-			};
+			provider = initializeProvider();
+			spyOnProviderMethods(provider);
 			provider.$mocks = mocks;
+			provider.$initialize = function(){
+				provider = initializeProvider();
+				spyOnProviderMethods(provider);
+				provider.$mocks = mocks;
+			};
+			return provider;
 		}
 
 		setupInitializer();
@@ -59,7 +65,7 @@
 		return dependencies;
 	}
 
-	function injectMocksForDependencies(injector, dependencies, override){
+	function injectMocksForDependencies(injector, dependencies, override, type){
 		var mocks = {};
 		angular.forEach(dependencies, function(dep){
 			if(typeof dep === 'string'){
@@ -72,6 +78,8 @@
 				}else if(override[dep]){
 					mocks[dep] = override[dep];
 				}else if(injector.has(mockPrefix + dep)){
+					mocks[dep] = injector.get(mockPrefix + dep);
+				}else if(type && (type === 'value' || type === 'constant') && injector.has(dep)){
 					mocks[dep] = injector.get(mockPrefix + dep);
 				}else{
 					throw new Error('QuickMock: Tried to inject mock for "' + dep + '" but no such mock exists. Please create one called "' + mockPrefix + dep + '" and try again.');
@@ -92,6 +100,19 @@
 	function getParamNames(func) {
 		var funStr = func.toString();
 		return funStr.slice(funStr.indexOf('(') + 1, funStr.indexOf(')')).match(/([^\s,]+)/g);
+	}
+
+	function getProviderType(providerName, invokeQueue){
+		for(var i=0; i<invokeQueue.length; i++){
+			var providerInfo = invokeQueue[i];
+			if(providerInfo[2][0] === providerName){
+				if(providerInfo[0] === '$provide')
+					return providerInfo[1];
+				else if(providerInfo[0] === '$controllerProvider')
+					return 'controller';
+			}
+		}
+		return 'unknown';
 	}
 
 	var argIndex = 2,
