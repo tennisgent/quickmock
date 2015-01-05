@@ -151,16 +151,6 @@
 	QuickMock.MOCK_PREFIX = mockPrefix;
 	QuickMock.USE_ACTUAL = 'USE_ACTUAL_IMPLEMENTATION';
 
-	/* Stolen from the angular.js source code */
-	var SNAKE_CASE_REGEXP = /[A-Z]/g;
-	function snake_case(name, separator) {
-	    separator = separator || '_';
-	    return name.replace(SNAKE_CASE_REGEXP, function(letter, pos) {
-	        return (pos ? separator : '') + letter.toLowerCase();
-	    });
-	}
-	/* End plaigarism */
-
 	window.QuickMock = QuickMock;
 
 	return QuickMock;
