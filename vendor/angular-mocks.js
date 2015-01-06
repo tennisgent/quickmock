@@ -1972,6 +1972,8 @@
 
 	if(window.jasmine || window.mocha) {
 
+		console.log('were in jasmine or mocha');
+
 		var currentSpec = null,
 			isSpecRunning = function() {
 				return !!currentSpec;

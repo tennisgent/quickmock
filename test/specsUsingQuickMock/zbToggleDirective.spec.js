@@ -8,9 +8,12 @@
 				providerName: 'zbToggle',
 				moduleName: 'QuickMockDemo',
 				mockModules: ['QuickMockDemoMocks'],
-				html: '<div zb-toggle></div>'    		// default html to be compiled when .$compile() is called
+				html: '<div zb-toggle></div>',    		// default html to be compiled when .$compile() is called
+				dependencies: ['NotificationService']
 			});
+			console.log('before compile');
 			zbToggle.$compile();  // .$compile() compiles the html string and then calls scope.$digest()
+			console.log('after compile');
 		});
 
 		it('should have the toggle class', function(){

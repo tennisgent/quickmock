@@ -1,31 +1,60 @@
 (function(angular){
 
-	var opts;
+	var opts, allModules, injector, $controller, $compile, invokeQueue, providerType;
 
 	function QuickMock(options){
-		if(!options.moduleName){
-			throw new Error('QuickMock: No moduleName given. You must give the name of the module that contains the provider you wish to test.');
-		}
-		if(!options.providerName){
-			throw new Error('QuickMock: No providerName given. You must give the name of the provider you wish to test.');
-		}
-
-		angular.forEach(options.mockModules = (options.mockModules || []), function(mockMod){
-			angular.module(mockMod);
-		});
-
-		opts = options;
-
+		opts = assertRequiredOptions(options);
 		return mockProvider();
 	}
 
+	QuickMock.directive = function(options){
+
+		opts = assertRequiredOptions(options);
+
+		allModules = opts.mockModules.concat(['ngMock', opts.moduleName]);
+		injector = angular.injector(allModules);
+		$controller = injector.get('$controller');
+		$compile = injector.get('$compile');
+		invokeQueue = angular.module(opts.moduleName)._invokeQueue;
+		providerType = getProviderType(opts.providerName, invokeQueue);
+
+		var dependencies = getProviderDependenciesFromInvokeQueue(opts.providerName, invokeQueue),
+			mocks = injectMocksForDependencies(injector, dependencies, providerType, allModules),
+			provider = {};
+
+		console.log('going to do stuff');
+		angular.mock.module(function($provide){
+			console.log($provide);
+			angular.forEach(mocks, function(mock, serviceName){
+				$provide.value(serviceName, mock);
+			});
+		});
+
+		function setupDirective(){
+			provider.$scope = injector.get('$rootScope').$new();
+			provider.$mocks = mocks;
+			provider.$compile = function(html){
+				if(!html && !opts.html){
+					throw new Error('QuickMock: Cannot compile "' + opts.providerName + '" directive. No html string provided.');
+				}
+				provider.$element = angular.element(html || opts.html);
+				$compile(provider.$element)(provider.$scope);
+				provider.$scope.$digest();
+			};
+		}
+
+		setupDirective();
+
+		return provider;
+	};
+
 	function mockProvider(){
-		var allModules = ['ngMock', opts.moduleName].concat(opts.mockModules),
-			injector = angular.injector(allModules),
-			$controller = injector.get('$controller'),
-			$compile = injector.get('$compile'),
-			invokeQueue = angular.module(opts.moduleName)._invokeQueue,
-			providerType = getProviderType(opts.providerName, invokeQueue);
+		allModules = opts.mockModules.concat(['ngMock', opts.moduleName]);
+		injector = angular.injector(allModules);
+		$controller = injector.get('$controller');
+		$compile = injector.get('$compile');
+		invokeQueue = angular.module(opts.moduleName)._invokeQueue;
+		providerType = getProviderType(opts.providerName, invokeQueue);
 
 		if(!injector.has(opts.providerName) && providerType !== 'controller' && providerType !== 'directive'){
 			throw new Error('QuickMock: Cannot get mocks for "' + opts.providerName + '" because no such provider exists');
@@ -54,6 +83,18 @@
 		}
 
 		function setupDirective(){
+			angular.forEach(invokeQueue, function(providerData){
+				var currProviderName = providerData[2][0];
+				if(currProviderName === opts.providerName){
+					var currProviderDeps = providerData[2][1];
+					for(var i=0; i<currProviderDeps.length - 1; i++){
+						if(currProviderDeps[i].indexOf(mockPrefix) !== 0)
+							currProviderDeps[i] = mockPrefix + currProviderDeps[i];
+					}
+				}
+			});
+
+
 			provider.$scope = injector.get('$rootScope').$new();
 			provider.$mocks = mocks;
 			provider.$compile = function(html){
@@ -61,6 +102,7 @@
 					throw new Error('QuickMock: Cannot compile "' + opts.providerName + '" directive. No html string provided.');
 				}
 				provider.$element = angular.element(html || opts.html);
+
 				$compile(provider.$element)(provider.$scope);
 				provider.$scope.$digest();
 			};
@@ -98,6 +140,9 @@
 	}
 
 	function getMockForService(serviceName, injector, type){
+		if(serviceName.indexOf(mockPrefix) === 0){
+			serviceName.replace(mockPrefix, '');
+		}
 		if(opts.mocks && opts.mocks[serviceName] === QuickMock.USE_ACTUAL){
 			if(injector.has(serviceName)){
 				return injector.get(serviceName);
@@ -141,6 +186,21 @@
 			}
 		}
 		return 'unknown';
+	}
+
+	function assertRequiredOptions(options){
+		if(!options.moduleName){
+			throw new Error('QuickMock: No moduleName given. You must give the name of the module that contains the provider/service you wish to test.');
+		}
+		if(!options.providerName){
+			throw new Error('QuickMock: No providerName given. You must give the name of the provider/service you wish to test.');
+		}
+
+		//angular.forEach(options.mockModules = (options.mockModules || []), function(mockMod){
+		//	angular.module(mockMod);
+		//});
+
+		return options;
 	}
 
 	var argIndex = 2,

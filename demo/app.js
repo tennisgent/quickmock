@@ -67,15 +67,16 @@
 		})
 
 		.service('NotificationService', ['$window', 'NotificationTitles', function($window, titles){
+			console.log('NotficationService initialized');
 			return {
 				error: function(msg){
 					$window.alert(titles.error + '\n\n' + msg);
 				},
 				success: function(msg){
-					$window.alert(titles.success + '\n\n' + msg);
+					//$window.alert(titles.success + '\n\n' + msg);
 				},
 				warning: function(msg){
-					$window.alert(titles.warning + '\n\n' + msg);
+					//$window.alert(titles.warning + '\n\n' + msg);
 				},
 				basic: function(msg){
 					$window.alert(titles.basic + '\n\n' + msg);
@@ -118,6 +119,7 @@
 		])
 
 		.directive('zbToggle', ['NotificationService', function(NotificationService){
+			console.log('directive intialized');
 			return {
 				restrict: 'AE',
 				replace: true,
@@ -132,8 +134,10 @@
 
 					scope.check = false;
 
+					//console.log(NotificationService.success);
+
 					scope.$watch('check', function(val){
-						console.log('check watch called', val);
+						//console.log('check watch called', val);
 						NotificationService[val ? 'success' : 'warning'](notificationMessage + val);
 					});
 
