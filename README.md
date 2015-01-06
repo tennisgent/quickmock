@@ -4,41 +4,34 @@ QuickMock
 QuickMock is a micro-library for initializing, mocking and auto-injecting provider dependencies for Jasmine unit tests
 
 
-How Do I Use It?
+What does it do?
 ----------------
 
 Mocking out dependencies in unit tests can be a huge pain. Angular makes testing "easy", but mocking out EVERY dependecy isn't so slick. If you've ever written an Angular unit test, you've probably seen a ton of beforeEach boilerplate that looks something like this:
 
 ```javascript
-describe('DocumentRequestService', function(){
-	var mockModule, documentRequestService, $httpBackend, mockTileConfig;
+describe('zb-toggle Directive', function () {
+		var scope, element, notificationService, $compile;
 
-	mockTileConfig = function(){
-		return {
-			dcObjCode: 'MOCK',
-			dcObjID: '123123123'
-		};
-	};
-
-	beforeEach(function () {
-		mockModule = angular.module("mockModule", ['attask', "attask.i18n", 'ngSanitize']);
-		mockModule.factory('StreamAPIService', [function() {
-			return jasmine.createSpyObj('StreamAPIService', ['get', 'edit', 'insert', 'remove', 'copy']);
-		}]);
-		mockModule.factory('SpringControllerService', [function(){
-			return jasmine.createSpyObj('SpringControllerService', ['get','post','put','action']);
-		}]);
-		module('mockModule');
-		module('documentCentral.services.DocumentRequestService');
-		module(function($provide){
-			$provide.factory('tileConfig', mockTileConfig);
+		beforeEach(function(){
+			module('QuickMockDemo');
+			module(function($provide){
+				var mockNotificationService = jasmine.createSpyObj('NotificationService',
+				    ['error','success','warning','basic','confirm']);
+				$provide.value('NotificationService', mockNotificationService);
+			});
+			inject(function(_$rootScope_, _$compile_, _NotificationService_){
+				scope = _$rootScope_.$new();
+				$compile = _$compile_;
+				notificationService = _NotificationService_;
+			});
 		});
-	});
 
-	beforeEach(inject(function (DocumentRequestService, _$httpBackend_) {
-		documentRequestService = DocumentRequestService;
-		$httpBackend = _$httpBackend_;
-	}));
+		beforeEach(function(){
+			element = angular.element('<div zb-toggle></div>');
+			$compile(element)(scope);
+			scope.$digest();
+		});
 
 	// ... write actual test cases here
 });
