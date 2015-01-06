@@ -57,7 +57,6 @@
 		}])
 
 		.factory('___NotificationService', [function(){
-			console.log('NotificationService Mock initialized');
 			return jasmine.createSpyObj('NotificationService', ['error','success','warning','basic','confirm']);
 		}])
 

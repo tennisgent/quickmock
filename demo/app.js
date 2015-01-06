@@ -34,7 +34,9 @@
 			url: /^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$/
 		})
 
-		.factory('UserFormValidator', ['InvalidUserFormMessages', 'UserRegex', function(msg, regex){
+		.factory('UserFormValidator', function(InvalidUserFormMessages, UserRegex){
+			var msg = InvalidUserFormMessages;
+			var regex = UserRegex;
 			return function(user){
 				var response = {isValid: false, messages: []};
 				if(!user || angular.equals(user, {})) return response;
@@ -56,7 +58,7 @@
 				response.isValid = !response.messages.length;
 				return response;
 			};
-		}])
+		})
 
 		.value('NotificationTitles', {
 			error: 'It looks like something went wrong...',
@@ -67,21 +69,20 @@
 		})
 
 		.service('NotificationService', ['$window', 'NotificationTitles', function($window, titles){
-			console.log('NotficationService initialized');
 			return {
-				error: function(msg){
+				error: function notificationError(msg){
 					$window.alert(titles.error + '\n\n' + msg);
 				},
-				success: function(msg){
-					//$window.alert(titles.success + '\n\n' + msg);
+				success: function notificationSuccess(msg){
+					$window.alert(titles.success + '\n\n' + msg);
 				},
-				warning: function(msg){
-					//$window.alert(titles.warning + '\n\n' + msg);
+				warning: function notificationWarning(msg){
+					$window.alert(titles.warning + '\n\n' + msg);
 				},
-				basic: function(msg){
+				basic: function notificationBasic(msg){
 					$window.alert(titles.basic + '\n\n' + msg);
 				},
-				confirm: function(msg){
+				confirm: function notificationConfirm(msg){
 					return $window.confirm(titles.confirm + '\n\n' + msg);
 				}
 			};
@@ -119,7 +120,6 @@
 		])
 
 		.directive('zbToggle', ['NotificationService', function(NotificationService){
-			console.log('directive intialized');
 			return {
 				restrict: 'AE',
 				replace: true,
@@ -129,20 +129,38 @@
 					+ '<span ng-transclude></span>'
 					+ '</div>',
 				link: function(scope, elem, attrs){
-
 					var notificationMessage = 'Your preference has been set to: ';
-
 					scope.check = false;
-
-					//console.log(NotificationService.success);
-
 					scope.$watch('check', function(val){
-						//console.log('check watch called', val);
 						NotificationService[val ? 'success' : 'warning'](notificationMessage + val);
 					});
 
 				}
 			};
 		}])
+
+		.filter('firstInitialLastName', function(){
+			// returns first initial and last name
+			// ex: 'M. Jackson' for {firstName: 'Michael', lastName: 'Jackson'}
+			return function(user){
+				if(typeof user !== 'object' || user === null){
+					return user;
+				}
+				var output = '';
+				if(user.firstName){
+					angular.forEach(user.firstName.split(' '), function(word){
+						output += word[0] + '.';
+					});
+				}
+				if(user.lastName){
+					if(output === ''){
+						output = user.lastName;
+					}else{
+						output += ' ' + user.lastName;
+					}
+				}
+				return output;
+			};
+		})
 
 })();
