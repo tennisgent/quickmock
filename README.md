@@ -7,7 +7,7 @@ QuickMock is a micro-library for initializing, mocking and auto-injecting provid
 What does it do?
 ----------------
 
-Mocking out dependencies in unit tests can be a huge pain. Angular makes testing "easy", but mocking out *every* dependecy isn't so slick. If you've ever written an Angular unit test (using Jasmine), you've probably seen a ton of beforeEach boilerplate that looks something like this:
+Mocking out dependencies in unit tests can be a huge pain. Angular makes testing "easy", but mocking out *every* dependecy isn't so slick. If you've ever written an Angular unit test (using Jasmine), you've probably seen a ton of `beforeEach` boilerplate that looks something like this:
 
 ```javascript
 describe('zb-toggle Directive', function () {
@@ -144,7 +144,18 @@ Notice the prefix to the name of the `___$window` mock. By declaring each mocked
 The QuickMock API
 -----------------
 
-As shown in the example above, a call to QuickMock accepts a config object and returns an object, which in this case we called `notificationService`. The `notificationService` object provides all of the data you need to write tests for the `NotificationService` provider.  Here is a walk through of all the information you are given. The following properties are avaiable when testing all provider types (services/factories/directives/controllers/filters/etc):
+As shown in the example above, a call to QuickMock accepts a config object and returns an object, which in this case we called `notificationService`. 
+
+####The Config Object
+* `providerName` (String) - The name of the provider you want to test
+* `moduleName` (String) - The name of the module that contains the provider above
+* `mockModules` (Array:String) - An array of the names of modules that contain mocks for any of the provider's dependencies
+* `useActualDependencies` (Boolean) - If QuickMock cannot find a mock for a required dependency, it will thrown an exception. If, instead, you wish to delegate to the actual implementations of the dependencies instead of mocking them out, set this flag to `true`.
+* `html` (String) - For directives only, this is the default html that will be compiled when `.$compile()` is called (this is explained below).
+
+
+####The Returned Object
+The `notificationService` object provides all of the data you need to write tests for the `NotificationService` provider.  Here is a walk through of all the information you are given. The following properties are avaiable when testing all provider types (services/factories/directives/controllers/filters/etc):
 
 * `.$mocks` (Object) - contains all of the mocked dependencies for the provider you are testing
 
@@ -184,7 +195,7 @@ The following properties are specific to testing `directive` providers and will 
 	};
 }])
 ```
-* `.$compile()` (Function) - compiles the given html string and calls `$scope.$digest()` 
+* `.$compile([html])` (Function) - compiles the given html string and calls then `$scope.$digest()`. If no html string is given, it will default to the html provided in the config object.
 
 ```javascript
 beforeEach(function(){
