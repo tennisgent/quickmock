@@ -7,10 +7,7 @@
 			notificationService = QuickMock({
 				providerName: 'NotificationService',
 				moduleName: 'QuickMockDemo',
-				mockModules: ['QuickMockDemoMocks'],
-				mocks: {
-					NotificationTitles: QuickMock.USE_ACTUAL
-				}
+				mockModules: ['QuickMockDemoMocks']
 			});
 			fakeMessage = 'some fake message';
 			mockWindow = notificationService.$mocks.$window;

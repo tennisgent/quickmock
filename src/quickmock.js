@@ -37,17 +37,25 @@
 		// Loop through invokeQueue, find this provider's dependencies and prefix
 		// them so Angular will inject the mocked versions
 		angular.forEach(invokeQueue, function(providerData){
-			var currProviderName = providerData[2][0];
+			var currProviderName = providerData[2][0],
+				currProviderType = providerData[1];
 			if(currProviderName === opts.providerName){
 				var currProviderDeps = providerData[2][1];
 				for(var i=0; i<currProviderDeps.length - 1; i++){
 					var depName = currProviderDeps[i],
-						mockServiceName = depName;
-					if(opts.mocks[mockServiceName] && opts.mocks[mockServiceName] === QuickMock.USE_ACTUAL){
+						mockServiceName = depName,
+						depType = getProviderType(depName, invokeQueue);
+					if(opts.useActualDependencies || opts.mocks[mockServiceName] && opts.mocks[mockServiceName] === QuickMock.USE_ACTUAL){
+						// don't do anything different
+					}else if(depType === 'value' || depType === 'constant'){
 						// don't do anything different
 					}else if(depName.indexOf(mockPrefix) !== 0){
 						mockServiceName = mockPrefix + depName;
 						currProviderDeps[i] = mockServiceName;
+					}
+					if(!injector.has(mockServiceName)){
+						throw new Error('QuickMock: Cannot inject mock for "' + depName + '" because no such mock exists. Please write a mock ' + depType + ' called "'
+							+ mockServiceName + '" (or set the useActualDependencies to true) and try again.');
 					}
 					mocks[depName] = injector.get(mockServiceName);
 				}

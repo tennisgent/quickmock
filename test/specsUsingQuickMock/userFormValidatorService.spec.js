@@ -7,14 +7,7 @@
 			formValidator = QuickMock({
 				providerName: 'UserFormValidator',
 				moduleName: 'QuickMockDemo',
-				mockModules: ['QuickMockDemoMocks'],
-
-				// QuickMock defaults to using actual implementations for .value() and .constant() providers
-				// so this mocks object below is not needed, but can be included if desired
-				mocks: {
-					InvalidUserFormMessages: QuickMock.USE_ACTUAL,
-					UserRegex: QuickMock.USE_ACTUAL
-				}
+				mockModules: ['QuickMockDemoMocks']
 			});
 			fakeUser = {  					// this fakeUser will pass the validator as is
 				email: 'bob@bob.com',
