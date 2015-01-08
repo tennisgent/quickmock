@@ -248,7 +248,7 @@ More In-depth Examples
 The examples above are very simple. You will find more in-depth examples for each of the various provider types in the [`demo/app.js`]('https://github.com/tennisgent/QuickMock/blob/master/demo/app.js') file. Each of the providers in that file have their own QuickMock test files that give more details on how to test them using QuickMock. Each of these specs files are found in the [`specsUsingQuickMock`](https://github.com/tennisgent/QuickMock/tree/master/test/specsUsingQuickMock) folder.
 
 | Type  | Name | Spec File |
-| ------------- | ------------- |
+| ------------- | ------------- | ------------- |
 | `service`  | `APIService` | [`apiService.spec.js`](https://github.com/tennisgent/QuickMock/blob/master/test/specsUsingQuickMock/apiService.spec.js) |
 | `factory`  | `UserFormValidator` | [`userFormValidatorService.spec.js`](https://github.com/tennisgent/QuickMock/blob/master/test/specsUsingQuickMock/userFormValidatorService.spec.js) |
 | `service`  | `NotificationService` | [`notificationService.spec.js`](https://github.com/tennisgent/QuickMock/blob/master/test/specsUsingQuickMock/notificationService.spec.js) |
