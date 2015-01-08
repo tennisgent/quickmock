@@ -260,12 +260,45 @@ For those who are curious, there are also examples of testing these same provide
 
 You will also find example mocks for each of these providers, as well as mocks the angular `$promise`, `$http` and `$scope` services in the [`mocksModule.js`](https://github.com/tennisgent/QuickMock/blob/master/test/mocksModule.js) file.
 
+Running the Tests
+-----------------
+
+####Karma:
+An example karma config file can be found [here](https://github.com/tennisgent/QuickMock/blob/master/test/karma.conf.js). You will need to include the following `files` in your karma config file:
+```javascript
+files: [
+    'vendor/angular.js',
+    'vendor/angular-mocks.js',
+    'vendor/quickmock.js',
+    '<source code>.js',
+    '<test specs>.js',
+    '<any file(s) containing mocks>.js'
+]
+```
+####Jasmine Spec Runner
+In the `<head>` of the SpecRunner.html file, you will need to include references to the following files:
+
+```html
+<!-- include vendor files here... -->
+<script src="vendor/angular.js"></script>
+<script src="vendor/angular-mocks.js"></script>
+<script src="vendor/quickmock.js"></script>
+
+<!-- include source files here... -->
+<script src="<source code>.js"></script>
+
+<!-- include spec files here... -->
+<script src="<test specs>.js"></script>
+```
+
+Jasmine Version
+---------------
+QuickMock currently only supports [Jasmine 2.1](http://jasmine.github.io/2.1/introduction.html) and above. If you need support for additional versions of Jasmine, please submit an issue.
+
 Ideas for Improvement?
 ----------------------
-
 If you have any ideas for how to make QuickMock better, please submit them as pull requests.
 
 Issues?
 -------
-
 If you find any issues or bugs, please submit them as issues on this repository.
