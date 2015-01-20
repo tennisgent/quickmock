@@ -260,6 +260,13 @@ For those who are curious, there are also examples of testing these same provide
 
 You will also find example mocks for each of these providers, as well as mocks the angular `$promise`, `$http` and `$scope` services in the [`mocksModule.js`](https://github.com/tennisgent/QuickMock/blob/master/test/mocksModule.js) file.
 
+Installing
+----------
+
+```
+npm install quickmock
+```
+
 Running the Tests
 -----------------
 
