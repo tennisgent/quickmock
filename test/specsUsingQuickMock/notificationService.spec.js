@@ -4,7 +4,7 @@
 		var notificationService, fakeMessage, mockWindow, titles;
 
 		beforeEach(function(){
-			notificationService = QuickMock({
+			notificationService = quickmock({
 				providerName: 'NotificationService',
 				moduleName: 'QuickMockDemo',
 				mockModules: ['QuickMockDemoMocks']

@@ -4,7 +4,7 @@
 		var filter, fakeUser;
 
 		beforeEach(function(){
-		    filter = QuickMock({
+		    filter = quickmock({
 				providerName: 'firstInitialLastName',
 				moduleName: 'QuickMockDemo'
 			});

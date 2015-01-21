@@ -4,7 +4,7 @@
 		var formCtrl, fakeUser, apiService, scope, formValidator, notifyService;
 
 		beforeEach(function(){
-			formCtrl = QuickMock({
+			formCtrl = quickmock({
 				providerName: 'FormController',
 				moduleName: 'QuickMockDemo',
 				mockModules: ['QuickMockDemoMocks']

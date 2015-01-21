@@ -2,7 +2,7 @@
 
 	var opts, mockPrefix = '___';
 
-	function QuickMock(options){
+	function quickmock(options){
 		opts = assertRequiredOptions(options);
 		return mockProvider();
 	}
@@ -29,7 +29,7 @@
 					var depName = currProviderDeps[i],
 						mockServiceName = depName,
 						depType = getProviderType(depName, invokeQueue);
-					if(opts.useActualDependencies || opts.mocks[mockServiceName] && opts.mocks[mockServiceName] === QuickMock.USE_ACTUAL){
+					if(opts.useActualDependencies || opts.mocks[mockServiceName] && opts.mocks[mockServiceName] === quickmock.USE_ACTUAL){
 						// don't do anything different
 					}else if(depType === 'value' || depType === 'constant'){
 						// don't do anything different
@@ -38,7 +38,7 @@
 						currProviderDeps[i] = mockServiceName;
 					}
 					if(!injector.has(mockServiceName)){
-						throw new Error('QuickMock: Cannot inject mock for "' + depName + '" because no such mock exists. Please write a mock ' + depType + ' called "'
+						throw new Error('quickmock: Cannot inject mock for "' + depName + '" because no such mock exists. Please write a mock ' + depType + ' called "'
 							+ mockServiceName + '" (or set the useActualDependencies to true) and try again.');
 					}
 					mocks[depName] = injector.get(mockServiceName);
@@ -72,7 +72,7 @@
 			provider.$mocks = mocks;
 			provider.$compile = function(html){
 				if(!html && !opts.html){
-					throw new Error('QuickMock: Cannot compile "' + opts.providerName + '" directive. No html string provided.');
+					throw new Error('quickmock: Cannot compile "' + opts.providerName + '" directive. No html string provided.');
 				}
 				provider.$element = angular.element(html || opts.html);
 
@@ -109,10 +109,10 @@
 
 	function assertRequiredOptions(options){
 		if(!options.moduleName){
-			throw new Error('QuickMock: No moduleName given. You must give the name of the module that contains the provider/service you wish to test.');
+			throw new Error('quickmock: No moduleName given. You must give the name of the module that contains the provider/service you wish to test.');
 		}
 		if(!options.providerName){
-			throw new Error('QuickMock: No providerName given. You must give the name of the provider/service you wish to test.');
+			throw new Error('quickmock: No providerName given. You must give the name of the provider/service you wish to test.');
 		}
 		options.mockModules = options.mockModules || [];
 		options.mocks = options.mocks || {};
@@ -146,11 +146,11 @@
 		return 'unknown';
 	}
 
-	QuickMock.MOCK_PREFIX = mockPrefix;
-	QuickMock.USE_ACTUAL = 'USE_ACTUAL_IMPLEMENTATION';
+	quickmock.MOCK_PREFIX = mockPrefix;
+	quickmock.USE_ACTUAL = 'USE_ACTUAL_IMPLEMENTATION';
 
-	window.QuickMock = QuickMock;
+	window.quickmock = quickmock;
 
-	return QuickMock;
+	return quickmock;
 	
 })(angular);

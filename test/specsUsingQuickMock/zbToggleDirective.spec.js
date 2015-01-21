@@ -4,7 +4,7 @@
 		var zbToggle;
 
 		beforeEach(function(){
-		    zbToggle = QuickMock({
+		    zbToggle = quickmock({
 				providerName: 'zbToggle',
 				moduleName: 'QuickMockDemo',
 				mockModules: ['QuickMockDemoMocks'],
@@ -24,7 +24,7 @@
 
 		it('should transclude the inner content', function(){
 			// .$compile() accepts a new html string, which will override the
-			// html string previously provided when QuickMock was initialized
+			// html string previously provided when quickmock was initialized
 			// NOTE: When .$compile() is called, you don't need to call $scope.$digest() again
 		    zbToggle.$compile('<div zb-toggle><div>Sample Inner Content</div></div>');
 			var span = zbToggle.$element.find('span');

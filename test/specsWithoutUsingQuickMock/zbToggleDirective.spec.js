@@ -2,7 +2,7 @@
 
 	/**
 	 * This is an example of a unit test for the zb-toggle directive, using
-	 * vanilla Jasmine, not using QuickMock
+	 * vanilla Jasmine, not using quickmock
 	 */
 
 	describe('zb-toggle Directive', function () {

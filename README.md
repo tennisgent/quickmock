@@ -1,7 +1,7 @@
-QuickMock
+quickmock
 ======
 
-QuickMock is a micro-library for initializing, mocking and auto-injecting provider dependencies for Jasmine unit tests
+quickmock is a micro-library for initializing, mocking and auto-injecting provider dependencies for Jasmine unit tests
 
 
 What does it do?
@@ -46,7 +46,7 @@ describe('zb-toggle Directive', function () {
 		var zbToggle;
 
 		beforeEach(function(){
-		    zbToggle = QuickMock({
+		    zbToggle = quickmock({
 				providerName: 'zbToggle',
 				moduleName: 'QuickMockDemo',
 				mockModules: ['QuickMockDemoMocks'],
@@ -62,12 +62,12 @@ describe('zb-toggle Directive', function () {
 How Does It Work?
 -----------------
 
-QuickMock does all of that `beforeEach` boilerplate behind the scenes, and returns an object that contains all of the data you need to write your tests. Mocks are defined in their own reusable Angular modules. QuickMock then sees which dependencies your provider (i.e. service/factory/directive/filter/controller/etc) has, looks up the mocks for those dependencies, injects them into the provider and into your test, and finally bootstraps all the required modules.
+quickmock does all of that `beforeEach` boilerplate behind the scenes, and returns an object that contains all of the data you need to write your tests. Mocks are defined in their own reusable Angular modules. quickmock then sees which dependencies your provider (i.e. service/factory/directive/filter/controller/etc) has, looks up the mocks for those dependencies, injects them into the provider and into your test, and finally bootstraps all the required modules.
 
 How do I use it?
 ----------------
 
-Let's start with a simple example. QuickMock can work with even the most complex providers, but to start out, we'll choose an easy service that we want to test. Let's say we have the following `'NotificationService'` provider:
+Let's start with a simple example. quickmock can work with even the most complex providers, but to start out, we'll choose an easy service that we want to test. Let's say we have the following `'NotificationService'` provider:
 
 ```javascript
 angular.module('QuickMockDemo', [])
@@ -111,7 +111,7 @@ describe('NotificationService', function () {
 	var notificationService;
 
 	beforeEach(function(){
-		notificationService = QuickMock({
+		notificationService = quickmock({
 			providerName: 'NotificationService', // the provider we wish to test
 			moduleName: 'QuickMockDemo',         // the module that contains our provider
 			mockModules: ['QuickMockDemoMocks']  // module(s) that contains mocks for our provider's dependencies
@@ -120,7 +120,7 @@ describe('NotificationService', function () {
 	....
 ```
 
-QuickMock will find the `NotificationService` and lookup its list of dependencies. It will then try to find mocks for each of those dependencies. 
+quickmock will find the `NotificationService` and lookup its list of dependencies. It will then try to find mocks for each of those dependencies.
 
 Writing Mocks
 -------------
@@ -134,23 +134,23 @@ angular.module('QuickMockDemoMocks', [])
 	}])
 ```
 
-Notice the prefix to the name of the `___$window` mock. By declaring each mocked service with a pre-defined prefix, QuickMock will know which mocks relate to which services. The default prefix is `'___'` (three underscores), but this prefix is configurable if you prefer a different one.  The great thing about these mocks is that they can be reused every time you need to test any future services that have these same dependencies. 
+Notice the prefix to the name of the `___$window` mock. By declaring each mocked service with a pre-defined prefix, quickmock will know which mocks relate to which services. The default prefix is `'___'` (three underscores), but this prefix is configurable if you prefer a different one.  The great thing about these mocks is that they can be reused every time you need to test any future services that have these same dependencies.
 
-**Important:** If you don't have a mock registered for any of the required dependencies, QuickMock will throw an error when it tries to inject the mock. So be sure to register a `___`-prefixed mock for each of the tested provider's dependencies. If you wish to delgate to actual implementations of the dependencies, instead of throwing this error, you can set the `useActualDependencies: true` flag on the config object that is passed into QuickMock.
+**Important:** If you don't have a mock registered for any of the required dependencies, quickmock will throw an error when it tries to inject the mock. So be sure to register a `___`-prefixed mock for each of the tested provider's dependencies. If you wish to delgate to actual implementations of the dependencies, instead of throwing this error, you can set the `useActualDependencies: true` flag on the config object that is passed into quickmock.
 
 **NOTE:** You don't have to provide mocks for `.value()` and `.constant()` providers. These dependencies are always delegated to the actual implementations. So, in our example, we don't have to mock out the `NotificationTitles` object because it is a `value` provider. 
 
 
-The QuickMock API
+The quickmock API
 -----------------
 
-As shown in the example above, a call to QuickMock accepts a config object and returns an object, which in this case we called `notificationService`. 
+As shown in the example above, a call to quickmock accepts a config object and returns an object, which in this case we called `notificationService`.
 
 ####The Config Object
 * `providerName` (String) - The name of the provider you want to test
 * `moduleName` (String) - The name of the module that contains the provider above
 * `mockModules` (Array:String) - An array of the names of modules that contain mocks for any of the provider's dependencies
-* `useActualDependencies` (Boolean) - If QuickMock cannot find a mock for a required dependency, it will thrown an exception. If, instead, you wish to delegate to the actual implementations of the dependencies instead of mocking them out, set this flag to `true`.
+* `useActualDependencies` (Boolean) - If quickmock cannot find a mock for a required dependency, it will thrown an exception. If, instead, you wish to delegate to the actual implementations of the dependencies instead of mocking them out, set this flag to `true`.
 * `html` (String) - For directives only, this is the default html that will be compiled when `.$compile()` is called (this is explained below).
 
 
@@ -199,7 +199,7 @@ The following properties are specific to testing `directive` providers and will 
 
 ```javascript
 beforeEach(function(){
-    zbToggle = QuickMock({
+    zbToggle = quickmock({
 		providerName: 'zbToggle',
 		moduleName: 'QuickMockDemo',
 		mockModules: ['QuickMockDemoMocks'],
@@ -245,7 +245,7 @@ it('should show a success message when toggled to true', function(){
 More In-depth Examples
 ----------------------
 
-The examples above are very simple. You will find more in-depth examples for each of the various provider types in the [`demo/app.js`]('https://github.com/tennisgent/QuickMock/blob/master/demo/app.js') file. Each of the providers in that file have their own QuickMock test files that give more details on how to test them using QuickMock. Each of these specs files are found in the [`specsUsingQuickMock`](https://github.com/tennisgent/QuickMock/tree/master/test/specsUsingQuickMock) folder.
+The examples above are very simple. You will find more in-depth examples for each of the various provider types in the [`demo/app.js`]('https://github.com/tennisgent/QuickMock/blob/master/demo/app.js') file. Each of the providers in that file have their own quickmock test files that give more details on how to test them using quickmock. Each of these specs files are found in the [`specsUsingQuickMock`](https://github.com/tennisgent/QuickMock/tree/master/test/specsUsingQuickMock) folder.
 
 | Type  | Name | Spec File |
 | ------------- | ------------- | ------------- |
@@ -256,7 +256,7 @@ The examples above are very simple. You will find more in-depth examples for eac
 | `directive`  | `zb-toggle` | [`zbToggleDirective.spec.js`](https://github.com/tennisgent/QuickMock/blob/master/test/specsUsingQuickMock/zbToggleDirective.spec.js) |
 | `filter`  | `firstInitialLastName` | [`firstInitialLastNameFilter.spec.js`](https://github.com/tennisgent/QuickMock/blob/master/test/specsUsingQuickMock/firstInitialLastNameFilter.spec.js) |
 
-For those who are curious, there are also examples of testing these same providers **without** using QuickMock for comparison. These specs are found in the [`specsWithoutUsingQuickMock`](https://github.com/tennisgent/QuickMock/tree/master/test/specsWithoutUsingQuickMock) folder.
+For those who are curious, there are also examples of testing these same providers **without** using quickmock for comparison. These specs are found in the [`specsWithoutUsingQuickMock`](https://github.com/tennisgent/QuickMock/tree/master/test/specsWithoutUsingQuickMock) folder.
 
 You will also find example mocks for each of these providers, as well as mocks the angular `$promise`, `$http` and `$scope` services in the [`mocksModule.js`](https://github.com/tennisgent/QuickMock/blob/master/test/mocksModule.js) file.
 
@@ -300,11 +300,11 @@ In the `<head>` of the SpecRunner.html file, you will need to include references
 
 Jasmine Version
 ---------------
-QuickMock currently only supports [Jasmine 2.1](http://jasmine.github.io/2.1/introduction.html) and above. If you need support for additional versions of Jasmine, please submit an issue.
+quickmock currently only supports [Jasmine 2.1](http://jasmine.github.io/2.1/introduction.html) and above. If you need support for additional versions of Jasmine, please submit an issue.
 
 Ideas for Improvement?
 ----------------------
-If you have any ideas for how to make QuickMock better, please submit them as pull requests.
+If you have any ideas for how to make quickmock better, please submit them as pull requests.
 
 Issues?
 -------

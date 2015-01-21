@@ -4,7 +4,7 @@
 		var formValidator, fakeUser;
 
 		beforeEach(function(){
-			formValidator = QuickMock({
+			formValidator = quickmock({
 				providerName: 'UserFormValidator',
 				moduleName: 'QuickMockDemo',
 				mockModules: ['QuickMockDemoMocks']

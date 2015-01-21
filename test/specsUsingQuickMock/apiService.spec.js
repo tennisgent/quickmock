@@ -4,7 +4,7 @@
 		var apiService;
 
 		beforeEach(function(){
-		    apiService = QuickMock({
+		    apiService = quickmock({
 				providerName: 'APIService',
 				moduleName: 'QuickMockDemo',
 				mockModules: ['QuickMockDemoMocks']
