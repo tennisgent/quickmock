@@ -1,13 +1,13 @@
 quickmock
 ======
 
-quickmock is a micro-library for initializing, mocking and auto-injecting provider dependencies for Jasmine unit tests
+quickmock is a micro-library for initializing, mocking and auto-injecting provider dependencies for Jasmine/Mocha/Chai/Sinon unit tests in AngularJS
 
 
 What does it do?
 ----------------
 
-Mocking out dependencies in unit tests can be a huge pain. Angular makes testing "easy", but mocking out *every* dependecy isn't so slick. If you've ever written an Angular unit test (using Jasmine), you've probably seen a ton of `beforeEach` boilerplate that looks something like this:
+Mocking out dependencies in unit tests can be a huge pain. Angular makes testing "easy", but mocking out *every* dependecy isn't so slick. If you've ever written an Angular unit test (using Jasmine/Mocha), you've probably seen a ton of `beforeEach` boilerplate that looks something like this:
 
 ```javascript
 describe('zb-toggle Directive', function () {
@@ -267,6 +267,11 @@ Installing
 npm install quickmock
 ```
 
+Testing Frameworks
+------------------
+
+As mentioned above, quickmock works with most of the popular JavaScript unit testing frameworks. It has been tested with Jasmine 1.3+, Mocha 2.0+, Sinon.js, Chai.js. It is expected to work with nearly any others. The exception to this rule is with the `spyOnProviderMethods: true` config option. This option only works with Jasmine and with Mocha (when using sinon.js).
+
 Running the Tests
 -----------------
 
@@ -297,10 +302,6 @@ In the `<head>` of the SpecRunner.html file, you will need to include references
 <!-- include spec files here... -->
 <script src="<test specs>.js"></script>
 ```
-
-Jasmine Version
----------------
-quickmock currently only supports [Jasmine 2.1](http://jasmine.github.io/2.1/introduction.html) and above. If you need support for additional versions of Jasmine, please submit an issue.
 
 Ideas for Improvement?
 ----------------------

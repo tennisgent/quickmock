@@ -18,10 +18,12 @@ module.exports = function (config) {
 			'vendor/angular.min.js',
 			'vendor/angular-mocks.js',
 			'src/quickmock.js',
+			'src/quickmock.mockHelper.js',
 			'demo/app.js',
 			'test/specsWithoutUsingQuickMock/*.spec.js',
 			'test/specsUsingQuickMock/*.spec.js',
-			'test/mocksModule.js'
+			//'test/mocksModule.js',
+			'test/withMockHelper.mocks.js'
 		],
 
 

@@ -21,34 +21,29 @@
 			// Remove any prefixed dependencies that presisted from a previous call,
 			// and check for any non-annotated services
 			sanitizeProvider(providerData, injector);
-			var currProviderName = providerData[2][0],
-				currProviderType = providerData[1];
+			var currProviderName = providerData[2][0];
 			if(currProviderName === opts.providerName){
 				var currProviderDeps = providerData[2][1];
 				for(var i=0; i<currProviderDeps.length - 1; i++){
-					var depName = currProviderDeps[i],
-						mockServiceName = depName,
-						depType = getProviderType(depName, invokeQueue);
-					if(opts.useActualDependencies || opts.mocks[mockServiceName] && opts.mocks[mockServiceName] === quickmock.USE_ACTUAL){
-						// don't do anything different
-					}else if(depType === 'value' || depType === 'constant'){
-						// don't do anything different
-					}else if(depName.indexOf(mockPrefix) !== 0){
-						mockServiceName = mockPrefix + depName;
-						currProviderDeps[i] = mockServiceName;
-					}
-					if(!injector.has(mockServiceName)){
-						throw new Error('quickmock: Cannot inject mock for "' + depName + '" because no such mock exists. Please write a mock ' + depType + ' called "'
-							+ mockServiceName + '" (or set the useActualDependencies to true) and try again.');
-					}
-					mocks[depName] = injector.get(mockServiceName);
+					var depName = currProviderDeps[i];
+					mocks[depName] = getMockForProvider(depName, currProviderDeps, i);
 				}
 			}
 		});
 
+		if(providerType === 'directive'){
+			setupDirective();
+		}else{
+			setupInitializer();
+		}
+
+		return provider;
+
 		function setupInitializer(){
 			provider = initProvider();
-			spyOnProviderMethods(provider);
+			if(opts.spyOnProviderMethods){
+				spyOnProviderMethods(provider);
+			}
 			provider.$mocks = mocks;
 			provider.$initialize = setupInitializer;
 		}
@@ -81,13 +76,30 @@
 			};
 		}
 
-		if(providerType === 'directive'){
-			setupDirective();
-		}else{
-			setupInitializer();
+		function getMockForProvider(depName, currProviderDeps, i){
+			var depType = getProviderType(depName, invokeQueue),
+				mockServiceName = depName;
+			if(opts.mocks[mockServiceName] && opts.mocks[mockServiceName] === quickmock.USE_ACTUAL){
+				console.log('quickmock: Using actual implementation of "' + depName + '" ' + depType + ' instead of mock');
+			}else if(depType === 'value' || depType === 'constant'){
+				if(injector.has(mockPrefix + depName)){
+					mockServiceName = mockPrefix + depName;
+					currProviderDeps[i] = mockServiceName;
+				}
+			}else if(depName.indexOf(mockPrefix) !== 0){
+				mockServiceName = mockPrefix + depName;
+				currProviderDeps[i] = mockServiceName;
+			}
+			if(!injector.has(mockServiceName)){
+				if(depType === 'value' || depType === 'constant' || opts.useActualDependencies){
+					console.log('quickmock: Using actual implementation of "' + depName + '" ' + depType + ' instead of mock');
+				}else {
+					throw new Error('quickmock: Cannot inject mock for "' + depName + '" because no such mock exists. Please write a mock ' + depType + ' called "'
+					+ mockServiceName + '" (or set the useActualDependencies to true) and try again.');
+				}
+			}
+			return injector.get(mockServiceName);
 		}
-
-		return provider;
 	}
 
 	function sanitizeProvider(providerData, injector){
@@ -108,6 +120,9 @@
 	}
 
 	function assertRequiredOptions(options){
+		if(!window.angular){
+			throw new Error('quickmock: Cannot initialize because angular is not available. Please load angular before loading the quickmock.js file.');
+		}
 		if(!options.moduleName){
 			throw new Error('quickmock: No moduleName given. You must give the name of the module that contains the provider/service you wish to test.');
 		}
@@ -122,7 +137,12 @@
 	function spyOnProviderMethods(provider){
 		angular.forEach(provider, function(property, propertyName){
 			if(angular.isFunction(property)){
-				spyOn(provider, propertyName).and.callThrough();
+				if(window.jasmine){
+					var spy = spyOn(provider, propertyName);
+					spy.andCallThrough ? spy.andCallThrough() : spy.and.callThrough();
+				}else if(window.sinon){
+					sinon.spy(provider, propertyName);
+				}
 			}
 		});
 	}
