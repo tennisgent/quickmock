@@ -120,25 +120,32 @@ describe('NotificationService', function () {
 	....
 ```
 
-quickmock will find the `NotificationService` and lookup its list of dependencies. It will then try to find mocks for each of those dependencies.
+quickmock will find the `NotificationService` and lookup its list of dependencies. It will then try to find mocks for each of those dependencies and inject them into your test.
 
-Writing Mocks
--------------
+How do I write the mocks I need?
+--------------------------------
 
-Where do those mocks come from?  We can provide mocks for each of the dependencies by creating a separate javascript file and writing a separate Angular module to contain those mocks. You can find examples in [`mocksModule.js`](https://github.com/tennisgent/quickmock/blob/master/test/mocksModule.js). Here is an one example:
+You can provide mocks for each of the dependencies by creating a separate javascript file and writing a separate Angular module to contain those mocks. This provides several benefits: it allows your mocks to be reusable between tests, gives you a specific structure for writing your tests, and easily integrates with quickmock.
+
+quickmock provides a simple syntax for declaring mocks in a module found in [`quickmock.mockHelper.js`](https://github.com/tennisgent/quickmock/blob/master/src/quickmock.mockHelper.js). It allows you to declare mocks as seen in the following simple example:
 
 ```javascript
-angular.module('QuickMockDemoMocks', [])
-	.factory('___$window', [function() {
-		return jasmine.createSpyObj('$window', ['alert','confirm']);
+// Declare an Angular module that will contain any mocks you need
+angular.module('SampleMocks', [])
+
+	// now declare specific mocks for each of your dependencies
+	.mockService('NotificationService', [function(){
+		return jasmine.createSpyObj('NotificationService', ['error','success','warning','basic','confirm']);
+	}])
+
+	.mockFactory('UserFormValidator', [function(){
+		var spy = jasmine.createSpy('UserFormValidator');
+		spy.and.returnValue(true);
+		return spy;
 	}])
 ```
 
-Notice the prefix to the name of the `___$window` mock. By declaring each mocked service with a pre-defined prefix, quickmock will know which mocks relate to which services. The default prefix is `'___'` (three underscores), but this prefix is configurable if you prefer a different one.  The great thing about these mocks is that they can be reused every time you need to test any future services that have these same dependencies.
-
-**Important:** If you don't have a mock registered for any of the required dependencies, quickmock will throw an error when it tries to inject the mock. So be sure to register a `___`-prefixed mock for each of the tested provider's dependencies. If you wish to delgate to actual implementations of the dependencies, instead of throwing this error, you can set the `useActualDependencies: true` flag on the config object that is passed into quickmock.
-
-**NOTE:** You don't have to provide mocks for `.value()` and `.constant()` providers. These dependencies are always delegated to the actual implementations. So, in our example, we don't have to mock out the `NotificationTitles` object because it is a `value` provider. 
+A detailed explanation of the two possible mock declaration syntaxes (and their advantages and disadvantages) can be found [here](https://github.com/tennisgent/quickmock/tree/master/test/mocks).
 
 
 The quickmock API
