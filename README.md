@@ -147,6 +147,8 @@ angular.module('SampleMocks', [])
 
 A detailed explanation of the two possible mock declaration syntaxes (and their advantages and disadvantages) can be found [here](https://github.com/tennisgent/quickmock/tree/master/test/mocks).
 
+For further information about how to write specific mocks to acurately mock out your providers, see [this SitePoint article](http://www.sitepoint.com/mocking-dependencies-angularjs-tests/) or the [Angular Developer Guide: Unit Testing](https://docs.angularjs.org/guide/unit-testing).
+
 
 The quickmock API
 -----------------

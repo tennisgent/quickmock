@@ -100,3 +100,7 @@ This will allow you to change the prefix later in the future, and your mock decl
 
 * If you don't have a mock registered for any of the required dependencies, quickmock will throw an error when it tries to inject the mock. So be sure to register a `___`-prefixed mock for each of the tested provider's dependencies. If you wish to delgate to actual implementations of the dependencies, instead of throwing this error, you can set the `useActualDependencies: true` flag on the config object that is passed into quickmock.
 * You don't have to provide mocks for `.value()` and `.constant()` providers. If a mock is not available for a `.value()` or `.constant()` provider, quickmock will silently delegate to the actual implementation.
+
+###Additional Information
+
+For further information about how to write specific mocks to acurately mock out your providers, see [this SitePoint article](http://www.sitepoint.com/mocking-dependencies-angularjs-tests/) or the [Angular Developer Guide: Unit Testing](https://docs.angularjs.org/guide/unit-testing).
