@@ -22,8 +22,7 @@ module.exports = function (config) {
 			'demo/app.js',
 			'test/specsWithoutUsingQuickMock/*.spec.js',
 			'test/specsUsingQuickMock/*.spec.js',
-			//'test/mocksModule.js',
-			'test/withMockHelper.mocks.js'
+			'test/mocks/withMockHelper.mocks.js'
 		],
 
 
