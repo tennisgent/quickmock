@@ -125,7 +125,7 @@ quickmock will find the `NotificationService` and lookup its list of dependencie
 Writing Mocks
 -------------
 
-Where do those mocks come from?  We can provide mocks for each of the dependencies by creating a separate javascript file and writing a separate Angular module to contain those mocks. You can find examples in [`mocksModule.js`](https://github.com/tennisgent/QuickMock/blob/master/test/mocksModule.js). Here is an one example:
+Where do those mocks come from?  We can provide mocks for each of the dependencies by creating a separate javascript file and writing a separate Angular module to contain those mocks. You can find examples in [`mocksModule.js`](https://github.com/tennisgent/quickmock/blob/master/test/mocksModule.js). Here is an one example:
 
 ```javascript
 angular.module('QuickMockDemoMocks', [])
@@ -245,20 +245,20 @@ it('should show a success message when toggled to true', function(){
 More In-depth Examples
 ----------------------
 
-The examples above are very simple. You will find more in-depth examples for each of the various provider types in the [`demo/app.js`]('https://github.com/tennisgent/QuickMock/blob/master/demo/app.js') file. Each of the providers in that file have their own quickmock test files that give more details on how to test them using quickmock. Each of these specs files are found in the [`specsUsingQuickMock`](https://github.com/tennisgent/QuickMock/tree/master/test/specsUsingQuickMock) folder.
+The examples above are very simple. You will find more in-depth examples for each of the various provider types in the [`demo/app.js`]('https://github.com/tennisgent/QuickMock/blob/master/demo/app.js') file. Each of the providers in that file have their own quickmock test files that give more details on how to test them using quickmock. Each of these specs files are found in the [`specsUsingQuickMock`](https://github.com/tennisgent/quickmock/tree/master/test/specsUsingQuickMock) folder.
 
 | Type  | Name | Spec File |
 | ------------- | ------------- | ------------- |
-| `service`  | `APIService` | [`apiService.spec.js`](https://github.com/tennisgent/QuickMock/blob/master/test/specsUsingQuickMock/apiService.spec.js) |
-| `factory`  | `UserFormValidator` | [`userFormValidatorService.spec.js`](https://github.com/tennisgent/QuickMock/blob/master/test/specsUsingQuickMock/userFormValidatorService.spec.js) |
-| `service`  | `NotificationService` | [`notificationService.spec.js`](https://github.com/tennisgent/QuickMock/blob/master/test/specsUsingQuickMock/notificationService.spec.js) |
-| `controller`  | `FormController` | [`formController.spec.js`](https://github.com/tennisgent/QuickMock/blob/master/test/specsUsingQuickMock/formController.spec.js) |
-| `directive`  | `zb-toggle` | [`zbToggleDirective.spec.js`](https://github.com/tennisgent/QuickMock/blob/master/test/specsUsingQuickMock/zbToggleDirective.spec.js) |
-| `filter`  | `firstInitialLastName` | [`firstInitialLastNameFilter.spec.js`](https://github.com/tennisgent/QuickMock/blob/master/test/specsUsingQuickMock/firstInitialLastNameFilter.spec.js) |
+| `service`  | `APIService` | [`apiService.spec.js`](https://github.com/tennisgent/quickmock/blob/master/test/specsUsingQuickMock/apiService.spec.js) |
+| `factory`  | `UserFormValidator` | [`userFormValidatorService.spec.js`](https://github.com/tennisgent/quickmock/blob/master/test/specsUsingQuickMock/userFormValidatorService.spec.js) |
+| `service`  | `NotificationService` | [`notificationService.spec.js`](https://github.com/tennisgent/quickmock/blob/master/test/specsUsingQuickMock/notificationService.spec.js) |
+| `controller`  | `FormController` | [`formController.spec.js`](https://github.com/tennisgent/quickmock/blob/master/test/specsUsingQuickMock/formController.spec.js) |
+| `directive`  | `zb-toggle` | [`zbToggleDirective.spec.js`](https://github.com/tennisgent/quickmock/blob/master/test/specsUsingQuickMock/zbToggleDirective.spec.js) |
+| `filter`  | `firstInitialLastName` | [`firstInitialLastNameFilter.spec.js`](https://github.com/tennisgent/quickmock/blob/master/test/specsUsingQuickMock/firstInitialLastNameFilter.spec.js) |
 
-For those who are curious, there are also examples of testing these same providers **without** using quickmock for comparison. These specs are found in the [`specsWithoutUsingQuickMock`](https://github.com/tennisgent/QuickMock/tree/master/test/specsWithoutUsingQuickMock) folder.
+For those who are curious, there are also examples of testing these same providers **without** using quickmock for comparison. These specs are found in the [`specsWithoutUsingQuickMock`](https://github.com/tennisgent/quickmock/tree/master/test/specsWithoutUsingQuickMock) folder.
 
-You will also find example mocks for each of these providers, as well as mocks the angular `$promise`, `$http` and `$scope` services in the [`mocksModule.js`](https://github.com/tennisgent/QuickMock/blob/master/test/mocksModule.js) file.
+You will also find example mocks for each of these providers, as well as mocks the angular `$promise`, `$http` and `$scope` services in the [`mocksModule.js`](https://github.com/tennisgent/quickmock/blob/master/test/mocksModule.js) file.
 
 Installing
 ----------
@@ -276,7 +276,7 @@ Running the Tests
 -----------------
 
 ####Karma:
-An example karma config file can be found [here](https://github.com/tennisgent/QuickMock/blob/master/test/karma.conf.js). You will need to include the following `files` in your karma config file:
+An example karma config file can be found [here](https://github.com/tennisgent/quickmock/blob/master/test/karma.conf.js). You will need to include the following `files` in your karma config file:
 ```javascript
 files: [
     'vendor/angular.js',
