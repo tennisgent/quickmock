@@ -151,6 +151,7 @@ As shown in the example above, a call to quickmock accepts a config object and r
 * `moduleName` (String) - The name of the module that contains the provider above
 * `mockModules` (Array:String) - An array of the names of modules that contain mocks for any of the provider's dependencies
 * `useActualDependencies` (Boolean) - If quickmock cannot find a mock for a required dependency, it will thrown an exception. If, instead, you wish to delegate to the actual implementations of the dependencies instead of mocking them out, set this flag to `true`.
+* `spyOnProviderMethods` (Boolean) - If true, quickmock will automatically spy on the methods of the provider. This will give you access to all of the usual spy functionality for any methods on your provider, but will also call through to the actual implementation so you can test all required functionality. This is very useful when testing certain provider methods that call one another.
 * `html` (String) - For directives only, this is the default html that will be compiled when `.$compile()` is called (this is explained below).
 
 
