@@ -2,6 +2,19 @@
 
 	angular.module('QuickMockDemo', ['ngAnimate'])
 
+		.config(['$logProvider', function($logProvider){
+			// this config block will be executed each time quickmock is called
+			// actual implementations of dependencies are injected, not mocks
+			$logProvider.debugEnabled(false);
+		}])
+
+		.run(['$log', function($log){
+			// this run block will be executed each time quickmock is called
+			// actual implementations of dependencies are injected, not mocks
+			$log.log('QuickMockDemo module has been initialized');
+		}])
+
+
 		.service('APIService', ['$http', function($http){
 			var api_url = 'http://api.someurl.com';
 			return {
@@ -162,13 +175,5 @@
 				return output;
 			};
 		})
-
-		.config(['$rootScopeProvider', function($rootScopeProvider){
-			$rootScopeProvider.digestTtl(15);
-		}])
-
-		//.run(['NotificationService', function(NotificationService){
-		//	NotificationService.success('The module has successfully loaded!!!');
-		//}])
 
 })();
