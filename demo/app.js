@@ -14,7 +14,6 @@
 			$log.log('QuickMockDemo module has been initialized');
 		}])
 
-
 		.service('APIService', ['$http', function($http){
 			var api_url = 'http://api.someurl.com';
 			return {
