@@ -8,36 +8,40 @@
 	}
 
 	function mockProvider(){
-		var allModules = opts.mockModules.concat(['ngMock', opts.moduleName]);
-		var injector = angular.injector(allModules);
-		var invokeQueue = angular.module(opts.moduleName)._invokeQueue;
-		var providerType = getProviderType(opts.providerName, invokeQueue);
-		var mocks = {},
+		var allModules = opts.mockModules.concat(['ngMock', opts.moduleName]),
+			injector = angular.injector(allModules),
+			modObj = angular.module(opts.moduleName),
+			invokeQueue = modObj._invokeQueue,
+			providerType = getProviderType(opts.providerName, invokeQueue),
+			mocks = {},
 			provider = {};
 
-		// Loop through invokeQueue, find this provider's dependencies and prefix
-		// them so Angular will inject the mocked versions
-		angular.forEach(invokeQueue, function(providerData){
-			// Remove any prefixed dependencies that presisted from a previous call,
-			// and check for any non-annotated services
-			sanitizeProvider(providerData, injector);
-			var currProviderName = providerData[2][0];
-			if(currProviderName === opts.providerName){
-				var currProviderDeps = providerData[2][1];
-				for(var i=0; i<currProviderDeps.length - 1; i++){
-					var depName = currProviderDeps[i];
-					mocks[depName] = getMockForProvider(depName, currProviderDeps, i);
+		if(providerType){
+			// Loop through invokeQueue, find this provider's dependencies and prefix
+			// them so Angular will inject the mocked versions
+			angular.forEach(invokeQueue, function(providerData){
+				// Remove any prefixed dependencies that presisted from a previous call,
+				// and check for any non-annotated services
+				sanitizeProvider(providerData, injector);
+				var currProviderName = providerData[2][0];
+				if(currProviderName === opts.providerName){
+					var currProviderDeps = providerData[2][1];
+					for(var i=0; i<currProviderDeps.length - 1; i++){
+						var depName = currProviderDeps[i];
+						mocks[depName] = getMockForProvider(depName, currProviderDeps, i);
+					}
 				}
-			}
-		});
+			});
 
-		if(providerType === 'directive'){
-			setupDirective();
-		}else{
-			setupInitializer();
+			if(providerType === 'directive'){
+				setupDirective();
+			}else{
+				setupInitializer();
+			}
 		}
 
 		return provider;
+
 
 		function setupInitializer(){
 			provider = initProvider();
@@ -56,6 +60,13 @@
 				case 'filter':
 					var $filter = injector.get('$filter');
 					return $filter(opts.providerName);
+				case 'animation':
+					return {
+						$animate: injector.get('$animate'),
+						$initialize: function initAnimation(){
+							angular.mock.module('ngAnimateMock');
+						}
+					};
 				default:
 					return injector.get(opts.providerName);
 			}
@@ -126,8 +137,8 @@
 		if(!options.moduleName){
 			throw new Error('quickmock: No moduleName given. You must give the name of the module that contains the provider/service you wish to test.');
 		}
-		if(!options.providerName){
-			throw new Error('quickmock: No providerName given. You must give the name of the provider/service you wish to test.');
+		if(!options.providerName && !options.configBlocks && !options.runBlocks){
+			throw new Error('quickmock: No providerName given. You must give the name of the provider/service you wish to test, or set the configBlocks or runBlocks flags.');
 		}
 		options.mockModules = options.mockModules || [];
 		options.mocks = options.mocks || {};
@@ -160,10 +171,12 @@
 						return 'directive';
 					case '$filterProvider':
 						return 'filter';
+					case '$animateProvider':
+						return 'animation';
 				}
 			}
 		}
-		return 'unknown';
+		return null;
 	}
 
 	quickmock.MOCK_PREFIX = mockPrefix;

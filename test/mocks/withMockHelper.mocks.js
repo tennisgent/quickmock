@@ -60,4 +60,10 @@
 			return jasmine.createSpyObj('NotificationService', ['error','success','warning','basic','confirm']);
 		}])
 
+		.mockFactory('$interval', ['$interval', function($interval){
+			// ngMock already provides good mocking support for $interval
+			// so just delegate to the actual implementation
+			return $interval;
+		}])
+
 })();

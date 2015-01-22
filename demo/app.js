@@ -1,6 +1,6 @@
 (function () {
 
-	angular.module('QuickMockDemo', [])
+	angular.module('QuickMockDemo', ['ngAnimate'])
 
 		.service('APIService', ['$http', function($http){
 			var api_url = 'http://api.someurl.com';
@@ -162,5 +162,13 @@
 				return output;
 			};
 		})
+
+		.config(['$rootScopeProvider', function($rootScopeProvider){
+			$rootScopeProvider.digestTtl(15);
+		}])
+
+		//.run(['NotificationService', function(NotificationService){
+		//	NotificationService.success('The module has successfully loaded!!!');
+		//}])
 
 })();

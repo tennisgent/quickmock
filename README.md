@@ -270,6 +270,17 @@ For those who are curious, there are also examples of testing these same provide
 
 You will also find example mocks for each of these providers, as well as mocks the angular `$promise`, `$http` and `$scope` services in the [`mocksModule.js`](https://github.com/tennisgent/quickmock/blob/master/test/mocksModule.js) file.
 
+
+Config and Run Blocks
+---------------------
+
+In order to retrieve the list of dependencies for any given provider, quickmock has to instantiate the angular modules provided in the `moduleName` and `mockModules` properties of the config object. These modules are instantiated the moment `quickmock({...})` is called. (Traditionally, this was done in `beforeEach` blocks using the `module()` method provided in the `ngMock` module.) As a side effect of this pre-instantiation, all `.config()` and `.run()` blocks declared in those modules will be run at that moment. So any code in those blocks will also be executed.
+
+As a rule, quickmock does not inject mocked versions of any of the dependencies for a `.config` or `.run` block. So these code blocks will receive the actual implemenations of the services/providers they depend on so that the code in these blocks will function as expected. If anyone would like to see this changed, please submit an issue and it can be discussed.
+
+If you wish to test code in a `.config()` or a `.run()` block, it is recommended that you not use quickmock. Instead, simply call angular's `module('myModule')` function, which will instantiate the `myModule` module and execute these code blocks.
+
+
 Installing
 ----------
 

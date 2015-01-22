@@ -3,7 +3,7 @@
 	describe('NotificationService', function () {
 		var notificationService, fakeMessage, mockWindow, titles;
 
-		beforeEach(function(){
+		beforeAll(function(){
 			notificationService = quickmock({
 				providerName: 'NotificationService',
 				moduleName: 'QuickMockDemo',
@@ -16,35 +16,35 @@
 
 		it('should display proper error message', function(){
 			notificationService.error(fakeMessage);
-			var messageShown = mockWindow.alert.calls.argsFor(0)[0];
+			var messageShown = mockWindow.alert.calls.mostRecent().args[0];
 			expect(messageShown).toContain(titles.error);
 			expect(messageShown).toContain(fakeMessage);
 		});
 
 		it('should display proper success message', function(){
 			notificationService.success(fakeMessage);
-			var messageShown = mockWindow.alert.calls.argsFor(0)[0];
+			var messageShown = mockWindow.alert.calls.mostRecent().args[0];
 			expect(messageShown).toContain(titles.success);
 			expect(messageShown).toContain(fakeMessage);
 		});
 
 		it('should display proper warning message', function(){
 			notificationService.warning(fakeMessage);
-			var messageShown = mockWindow.alert.calls.argsFor(0)[0];
+			var messageShown = mockWindow.alert.calls.mostRecent().args[0];
 			expect(messageShown).toContain(titles.warning);
 			expect(messageShown).toContain(fakeMessage);
 		});
 
 		it('should display proper basic message', function(){
 			notificationService.basic(fakeMessage);
-			var messageShown = mockWindow.alert.calls.argsFor(0)[0];
+			var messageShown = mockWindow.alert.calls.mostRecent().args[0];
 			expect(messageShown).toContain(titles.basic);
 			expect(messageShown).toContain(fakeMessage);
 		});
 
 		it('should display proper confirmation message', function(){
 			notificationService.confirm(fakeMessage);
-			var messageShown = mockWindow.confirm.calls.argsFor(0)[0];
+			var messageShown = mockWindow.confirm.calls.mostRecent().args[0];
 			expect(messageShown).toContain(titles.confirm);
 			expect(messageShown).toContain(fakeMessage);
 		});

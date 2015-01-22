@@ -17,6 +17,7 @@ module.exports = function (config) {
 		files: [
 			'vendor/angular.min.js',
 			'vendor/angular-mocks.js',
+			'vendor/angular-animate.js',  // only needed if you are declaring animations
 			'src/quickmock.js',
 			'src/quickmock.mockHelper.js',
 			'demo/app.js',
