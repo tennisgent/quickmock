@@ -1,6 +1,6 @@
 {
   "name": "quickmock",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "quickmock is an simple service for automatically injecting mocks into your AngularJS unit tests using Jasmine",
   "main": "src/quickmock.js",
   "directories": {
