@@ -76,13 +76,17 @@
 			var $compile = injector.get('$compile');
 			provider.$scope = injector.get('$rootScope').$new();
 			provider.$mocks = mocks;
-			provider.$compile = function(html){
-				if(!html && !opts.html){
-					throw new Error('quickmock: Cannot compile "' + opts.providerName + '" directive. No html string provided.');
+			provider.$compile = function quickmockCompile(html){
+				html = html || opts.html;
+				if(!html){
+					throw new Error('quickmock: Cannot compile "' + opts.providerName + '" directive. No html string/object provided.');
 				}
-				provider.$element = angular.element(html || opts.html);
-
+				if(angular.isObject(html)){
+					html = generateHtmlStringFromObj(html);
+				}
+				provider.$element = angular.element(html);
 				$compile(provider.$element)(provider.$scope);
+				provider.$isoScope = provider.$element.isolateScope();
 				provider.$scope.$digest();
 			};
 		}
@@ -132,7 +136,7 @@
 
 	function assertRequiredOptions(options){
 		if(!window.angular){
-			throw new Error('quickmock: Cannot initialize because angular is not available. Please load angular before loading the quickmock.js file.');
+			throw new Error('quickmock: Cannot initialize because angular is not available. Please load angular before loading quickmock.js.');
 		}
 		if(!options.moduleName){
 			throw new Error('quickmock: No moduleName given. You must give the name of the module that contains the provider/service you wish to test.');
@@ -179,11 +183,37 @@
 		return null;
 	}
 
+	function generateHtmlStringFromObj(html){
+		if(!html.$tag){
+			throw new Error('quickmock: Cannot compile "' + opts.providerName + '" directive. Html object does not contain $tag property.');
+		}
+		var htmlAttrs = html,
+			tagName = htmlAttrs.$tag,
+			htmlContent = htmlAttrs.$content;
+		html = '<' + tagName + ' ';
+		angular.forEach(htmlAttrs, function(val, attr){
+			if(attr !== '$content' && attr !== '$tag'){
+				html += snake_case(attr) + (val ? ('="' + val + '" ') : ' ');
+			}
+		});
+		html += htmlContent ? ('>' + htmlContent) : '>';
+		html += '</' + tagName + '>';
+		return html;
+	}
+
+	var SNAKE_CASE_REGEXP = /[A-Z]/g;
+	function snake_case(name, separator) {
+		separator = separator || '-';
+		return name.replace(SNAKE_CASE_REGEXP, function(letter, pos) {
+			return (pos ? separator : '') + letter.toLowerCase();
+		});
+	}
+
 	quickmock.MOCK_PREFIX = mockPrefix;
 	quickmock.USE_ACTUAL = 'USE_ACTUAL_IMPLEMENTATION';
 
 	window.quickmock = quickmock;
 
 	return quickmock;
-	
+
 })(angular);
