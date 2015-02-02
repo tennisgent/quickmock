@@ -15,15 +15,14 @@ module.exports = function (config) {
 
 		// list of files / patterns to load in the browser
 		files: [
-			'../vendor/angular.min.js',
+			'vendor/angular.min.js',
 			'vendor/angular-mocks.js',
-			'vendor/angular-animate.js',  // only needed if you are declaring animations
 			'src/quickmock.js',
 			'src/quickmock.mockHelper.js',
 			'demo/app.js',
-			'test/specsWithoutUsingQuickMock/*.spec.js',
-			'test/specsUsingQuickMock/*.spec.js',
-			'test/mocks/withMockHelper.mocks.js'
+			'demo/specsWithoutUsingQuickMock/*.spec.js',
+			'demo/specsUsingQuickMock/*.spec.js',
+			'demo/mocks/withMockHelper.mocks.js'
 		],
 
 
