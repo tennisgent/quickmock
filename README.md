@@ -209,28 +209,33 @@ The following properties are specific to testing `directive` providers and will 
 
 ```javascript
 it('should compile the given html string', function(){
-	zbToggle.$compile('<zb-toggle class="btn btn-round" init-state="true"></zb-toggle>');
+	zbToggle.$compile('<div zb-toggle class="btn btn-round" init-state="true"></div>');
+	expect(zbToggle.$element[0].tagName).toEqual('DIV');
 	expect(zbToggle.$element.hasClass('btn-round')).toEqual(true);
 	expect(zbToggle.$scope.initState).toEqual(true);
-	zbToggle.$compile('<div zb-toggle class="btn btn-shadow" init-state="false"></div>');
+	zbToggle.$compile('<span zb-toggle class="btn btn-shadow" init-state="false"></span>');
+	expect(zbToggle.$element[0].tagName).toEqual('SPAN');
 	expect(zbToggle.$element.hasClass('btn-shadow')).toEqual(true);
 	expect(zbToggle.$scope.initState).toEqual(false);
 });
 
 it('should compile the given html object', function(){
 	var htmlObj = {
-		$tag: 'zb-toggle',  	// $tag (required): will be the html tagName (i.e. '<zb-toggle ...>' or '<div ...>')
+		$tag: 'div',  			// $tag (required): will be the html tagName (i.e. '<zb-toggle ...>' or '<div ...>' or '<span ...>')
 		$content: '',  			// $content (optional): will be inner content of the html element
+		zbToggle: '',
 		class: 'btn btn-round',
 		initState: true			// properties are normalized (i.e. 'initState: true' will become 'init-state="true"')
 	};
 	zbToggle.$compile(htmlObj);
+	expect(zbToggle.$element[0].tagName).toEqual('DIV');
 	expect(zbToggle.$element.hasClass('btn-round')).toEqual(true);
 	expect(zbToggle.$scope.initState).toEqual(true);
-	htmlObj.$tag = 'div';
+	htmlObj.$tag = 'span';
 	htmlObj.class = 'btn btn-shadow';
 	htmlObj.initState = false;
 	zbToggle.$compile(htmlObj);
+	expect(zbToggle.$element[0].tagName).toEqual('SPAN');
 	expect(zbToggle.$element.hasClass('btn-shadow')).toEqual(true);
 	expect(zbToggle.$scope.initState).toEqual(false);
 });
