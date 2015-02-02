@@ -161,7 +161,7 @@ As shown in the example above, a call to quickmock accepts a config object and r
 * `mockModules` (Array:String) - An array of the names of modules that contain mocks for any of the provider's dependencies
 * `useActualDependencies` (Boolean) - If quickmock cannot find a mock for a required dependency, it will thrown an exception. If, instead, you wish to delegate to the actual implementations of the dependencies instead of mocking them out, set this flag to `true`.
 * `spyOnProviderMethods` (Boolean) - If true, quickmock will automatically spy on the methods of the provider. This will give you access to all of the usual spy functionality for any methods on your provider, but will also call through to the actual implementation so you can test all required functionality. This is very useful when testing certain provider methods that call one another.
-* `html` (String) - For directives only, this is the default html that will be compiled when `.$compile()` is called (this is explained below).
+* `html` (String|Object) - For directives only, this is the default html that will be compiled when `.$compile()` is called (this is explained below).
 
 
 ####The Returned Object
@@ -205,20 +205,36 @@ The following properties are specific to testing `directive` providers and will 
 	};
 }])
 ```
-* `.$compile([html])` (Function) - compiles the given html string and calls then `$scope.$digest()`. If no html string is given, it will default to the html provided in the config object.
+* `.$compile([html])` (Function) - compiles the given html string/object and calls then `$scope.$digest()`. If no html string/object is given, it will default to the html provided in the config object. You can also provide a javascript object, which will be generated into an html string.
 
 ```javascript
-beforeEach(function(){
-    zbToggle = quickmock({
-		providerName: 'zbToggle',
-		moduleName: 'QuickMockDemo',
-		mockModules: ['QuickMockDemoMocks'],
-		html: '<div zb-toggle></div>'  // default html to compile when calling .$compile()
-	});
-	zbToggle.$compile();
+it('should compile the given html string', function(){
+	zbToggle.$compile('<zb-toggle class="btn btn-round" init-state="true"></zb-toggle>');
+	expect(zbToggle.$element.hasClass('btn-round')).toEqual(true);
+	expect(zbToggle.$scope.initState).toEqual(true);
+	zbToggle.$compile('<div zb-toggle class="btn btn-shadow" init-state="false"></div>');
+	expect(zbToggle.$element.hasClass('btn-shadow')).toEqual(true);
+	expect(zbToggle.$scope.initState).toEqual(false);
+});
+
+it('should compile the given html object', function(){
+	var htmlObj = {
+		$tag: 'zb-toggle',  	// $tag (required): will be the html tagName (i.e. '<zb-toggle ...>' or '<div ...>')
+		$content: '',  			// $content (optional): will be inner content of the html element
+		class: 'btn btn-round',
+		initState: true			// properties are normalized (i.e. 'initState: true' will become 'init-state="true"')
+	};
+	zbToggle.$compile(htmlObj);
+	expect(zbToggle.$element.hasClass('btn-round')).toEqual(true);
+	expect(zbToggle.$scope.initState).toEqual(true);
+	htmlObj.$tag = 'div';
+	htmlObj.class = 'btn btn-shadow';
+	htmlObj.initState = false;
+	zbToggle.$compile(htmlObj);
+	expect(zbToggle.$element.hasClass('btn-shadow')).toEqual(true);
+	expect(zbToggle.$scope.initState).toEqual(false);
 });
 ```
-
 
 * `.$element` (jQuery/jqLite Element) - provides access to the element that results from `angular.element()`.
 
@@ -249,6 +265,15 @@ it('should show a success message when toggled to true', function(){
 	zbToggle.$scope.check = true;
 	zbToggle.$scope.$digest();
 	expect(zbToggle.$mocks.NotificationService.success).toHaveBeenCalled();
+});
+```
+
+
+* `.$isoScope` (Object) - provides access to the directive's Angular `isoloateScope` object, if one exists
+
+```javascript
+it('should have an isolateScope', function(){
+	expect(zbToggle.$isoScope).toBe(zbToggle.$element.isolateScope());
 });
 ```
 
