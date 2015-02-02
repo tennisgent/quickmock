@@ -208,7 +208,7 @@ The following properties are specific to testing `directive` providers and will 
 	};
 }])
 ```
-* `.$compile([html])` (Function) - compiles the given html string/object and calls then `$scope.$digest()`. If no html string/object is given, it will default to the html provided in the config object. You can also provide a javascript object, which will be generated into an html string.
+* `.$compile([html])` (Function) - compiles the given html string/object and calls then `$scope.$digest()`. If no html string/object is given, it will default to the html provided in the config object. You can provide a javascript object, which will be generated into an html string.
 
 ```javascript
 it('should compile the given html string', function(){

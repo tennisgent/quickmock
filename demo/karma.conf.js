@@ -15,7 +15,7 @@ module.exports = function (config) {
 
 		// list of files / patterns to load in the browser
 		files: [
-			'vendor/angular.min.js',
+			'../vendor/angular.min.js',
 			'vendor/angular-mocks.js',
 			'vendor/angular-animate.js',  // only needed if you are declaring animations
 			'src/quickmock.js',
