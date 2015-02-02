@@ -138,11 +138,11 @@
 		if(!window.angular){
 			throw new Error('quickmock: Cannot initialize because angular is not available. Please load angular before loading quickmock.js.');
 		}
-		if(!options.moduleName){
-			throw new Error('quickmock: No moduleName given. You must give the name of the module that contains the provider/service you wish to test.');
-		}
 		if(!options.providerName && !options.configBlocks && !options.runBlocks){
 			throw new Error('quickmock: No providerName given. You must give the name of the provider/service you wish to test, or set the configBlocks or runBlocks flags.');
+		}
+		if(!options.moduleName){
+			throw new Error('quickmock: No moduleName given. You must give the name of the module that contains the provider/service you wish to test.');
 		}
 		options.mockModules = options.mockModules || [];
 		options.mocks = options.mocks || {};
