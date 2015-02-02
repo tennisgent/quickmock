@@ -195,9 +195,12 @@ The following properties are specific to testing `directive` providers and will 
 			+ '<input type="checkbox" ng-model="check">'
 			+ '<span ng-transclude></span>'
 			+ '</div>',
+		scope: {
+			initState: '='
+		},
 		link: function(scope, elem, attrs){
 			var notificationMessage = 'Your preference has been set to: ';
-			scope.check = false;
+			scope.check = scope.initState || false;
 			scope.$watch('check', function(val){
 				NotificationService[val ? 'success' : 'warning'](notificationMessage + val);
 			});
