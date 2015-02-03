@@ -108,6 +108,7 @@
 			if(!injector.has(mockServiceName)){
 				if(depType === 'value' || depType === 'constant' || opts.useActualDependencies){
 					console.log('quickmock: Using actual implementation of "' + depName + '" ' + depType + ' instead of mock');
+					mockServiceName = mockServiceName.replace(mockPrefix, '');
 				}else {
 					throw new Error('quickmock: Cannot inject mock for "' + depName + '" because no such mock exists. Please write a mock ' + depType + ' called "'
 					+ mockServiceName + '" (or set the useActualDependencies to true) and try again.');
@@ -152,10 +153,10 @@
 	function spyOnProviderMethods(provider){
 		angular.forEach(provider, function(property, propertyName){
 			if(angular.isFunction(property)){
-				if(window.jasmine){
+				if(window.jasmine && window.spyOn && !property.calls){
 					var spy = spyOn(provider, propertyName);
 					spy.andCallThrough ? spy.andCallThrough() : spy.and.callThrough();
-				}else if(window.sinon){
+				}else if(window.sinon && window.sinon.spy){
 					sinon.spy(provider, propertyName);
 				}
 			}

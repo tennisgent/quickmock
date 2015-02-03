@@ -18,8 +18,16 @@
 				}
 			})
 			.controller('FakeController', function(FakeFactory, FakeService){
-				this.fakeFactory = FakeFactory;
-				this.fakeService = FakeService;
+				this.someFactory = FakeFactory;
+				this.someService = FakeService;
+				this.someFunction = function someFunction(){
+					FakeService.func1();
+				};
+			})
+			.controller('FakeController2', function($rootScope, FakeService){
+				$rootScope.someFunction = function someFunction(){
+					FakeService.func1();
+				};
 			});
 
 		angular.module('GeneralProvidersTestModuleMocks', [])
@@ -40,7 +48,7 @@
 					mockModules: ['GeneralProvidersTestModuleMocks']
 				};
 				initQuickMock = function initQuickMock(){
-					quickmock(config);
+					return quickmock(config);
 				};
 			});
 
@@ -64,6 +72,41 @@
 				config.moduleName = null;
 				expect(initQuickMock).toThrow();
 			});
+
+			it('should return the provider that is being tested', function(){
+				var result = quickmock(config);
+				expect(result.someFactory).toEqual(jasmine.any(Function));
+				expect(result.someService).toEqual(jasmine.any(Object));
+			});
+
+			it('should properly inject mocks for provider\'s dependencies', function(){
+				var result = quickmock(config);
+				expect(result.someFactory).toBe(result.$mocks.FakeFactory);
+				expect(result.someService).toBe(result.$mocks.FakeService);
+			});
+
+			it('should return spied methods if the spyOnProviderMethods flag is set', function(){
+				config.spyOnProviderMethods = true;
+				var result = quickmock(config);
+				expect(result.someFunction.calls).toEqual(jasmine.any(Object));
+			});
+
+			it('should not return spied methods if the spyOnProviderMethods flag is not set', function(){
+				config.spyOnProviderMethods = false;
+				var result = quickmock(config);
+				expect(result.someFunction.calls).toBeUndefined();
+			});
+
+			it('should throw an error if one of the provider\'s dependencies are not mocked', function(){
+				config.providerName = 'FakeController2';
+				expect(initQuickMock).toThrow();
+			});
+
+			//it('should not throw an error if one of the provider\'s dependencies are not mocked but useActualDependencies flag is set', function(){
+			//	config.providerName = 'FakeController2';
+			//	config.useActualDependencies = true;
+			//	expect(initQuickMock).not.toThrow();
+			//});
 
 		});
 
