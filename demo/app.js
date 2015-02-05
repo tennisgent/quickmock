@@ -1,6 +1,6 @@
 (function () {
 
-	angular.module('QuickMockDemo', ['ngAnimate'])
+	angular.module('QuickMockDemo', [])
 
 		.config(['$logProvider', function($logProvider){
 			// this config block will be executed each time quickmock is called
@@ -136,17 +136,25 @@
 				restrict: 'AE',
 				replace: true,
 				transclude: true,
-				template: '<div class="toggle" ng-click="check = !check">'
-					+ '<input type="checkbox" ng-model="check">'
-					+ '<span ng-transclude></span>'
+				template:
+					  '<div class="toggle" ng-click="check = !check">'
+						+ '<input type="checkbox" ng-model="check">'
+						+ '<span ng-transclude></span>'
 					+ '</div>',
+				scope: {
+					isDisabled: '=?',
+					check: '=ngModel'
+				},
 				link: function(scope, elem, attrs){
 					var notificationMessage = 'Your preference has been set to: ';
-					scope.check = false;
+					scope.check = scope.check || false;
 					scope.$watch('check', function(val){
 						NotificationService[val ? 'success' : 'warning'](notificationMessage + val);
 					});
-
+					var checkbox = elem.find('input');
+					scope.$watch('isDisabled', function(val){
+						checkbox.attr('disabled', !!val);
+					});
 				}
 			};
 		}])
