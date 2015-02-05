@@ -22,7 +22,8 @@
 		});
 
 		beforeEach(function(){
-			element = angular.element('<div zb-toggle></div>');
+			scope.isChecked = false;
+			element = angular.element('<div zb-toggle ng-model="isChecked"></div>');
 			$compile(element)(scope);
 			scope.$digest();
 		});
@@ -37,25 +38,25 @@
 		});
 
 		it('should transclude the inner content', function(){
-			element = angular.element('<div zb-toggle><div>Sample Inner Content</div></div>');
+			element = angular.element('<div zb-toggle ng-model="isChecked"><div>Sample Inner Content</div></div>');
 			$compile(element)(scope);
-			scope.$digest();
+			element.isolateScope().$digest();
 			var span = element.find('span');
 			expect(span.html()).toContain('Sample Inner Content');
 		});
 
 		it('should toggle the checkbox when clicked', function(){
-			expect(scope.check).toBe(false);
+			expect(element.isolateScope().check).toBe(false);
 			element[0].click();
-			expect(scope.check).toBe(true);
+			expect(element.isolateScope().check).toBe(true);
 			element[0].click();
-			expect(scope.check).toBe(false);
+			expect(element.isolateScope().check).toBe(false);
 		});
 
 		it('should show a success message when toggled to true', function(){
-			expect(scope.check).toBe(false);
-			scope.check = true;
-			scope.$digest();
+			expect(element.isolateScope().check).toBe(false);
+			element.isolateScope().check = true;
+			element.isolateScope().$digest();
 			expect(notificationService.success).toHaveBeenCalled();
 		});
 
