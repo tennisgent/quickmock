@@ -285,6 +285,11 @@ it('should have an isolateScope', function(){
 });
 ```
 
+How do I shut it up?
+--------------------
+
+You might find that quickmock logs a fair amount of information to the console. This is simply to make sure that you know what is happening behind the scenes and are aware of any possible warnings that might pop up. If you wish to turn off logging, you can simply set the `quickmock.MUTE_LOGS` flag to `true`. This will disable the logs and you won't see any data from quickmock output to the console. This DOES NOT, however, turn off exceptions that may be thrown as a result of required parameters not being available, such as `angular` being `undefined` or if you're missing required config parameters.
+
 More In-depth Examples
 ----------------------
 
