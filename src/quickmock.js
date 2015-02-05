@@ -1,6 +1,10 @@
 (function(angular){
 
-	var opts, mockPrefix = '___';
+	var opts, mockPrefix;
+
+	quickmock.MOCK_PREFIX = mockPrefix = (quickmock.MOCK_PREFIX || '___');
+	quickmock.USE_ACTUAL = 'USE_ACTUAL_IMPLEMENTATION';
+	quickmock.MUTE_LOGS = false;
 
 	function quickmock(options){
 		opts = assertRequiredOptions(options);
@@ -20,7 +24,7 @@
 			// Loop through invokeQueue, find this provider's dependencies and prefix
 			// them so Angular will inject the mocked versions
 			angular.forEach(invokeQueue, function(providerData){
-				// Remove any prefixed dependencies that presisted from a previous call,
+				// Remove any prefixed dependencies that persisted from a previous call,
 				// and check for any non-annotated services
 				sanitizeProvider(providerData, injector);
 				var currProviderName = providerData[2][0];
@@ -95,7 +99,7 @@
 			var depType = getProviderType(depName, invokeQueue),
 				mockServiceName = depName;
 			if(opts.mocks[mockServiceName] && opts.mocks[mockServiceName] === quickmock.USE_ACTUAL){
-				console.log('quickmock: Using actual implementation of "' + depName + '" ' + depType + ' instead of mock');
+				quickmockLog('quickmock: Using actual implementation of "' + depName + '" ' + depType + ' instead of mock');
 			}else if(depType === 'value' || depType === 'constant'){
 				if(injector.has(mockPrefix + depName)){
 					mockServiceName = mockPrefix + depName;
@@ -107,7 +111,7 @@
 			}
 			if(!injector.has(mockServiceName)){
 				if(depType === 'value' || depType === 'constant' || opts.useActualDependencies){
-					console.log('quickmock: Using actual implementation of "' + depName + '" ' + depType + ' instead of mock');
+					quickmockLog('quickmock: Using actual implementation of "' + depName + '" ' + depType + ' instead of mock');
 					mockServiceName = mockServiceName.replace(mockPrefix, '');
 				}else {
 					throw new Error('quickmock: Cannot inject mock for "' + depName + '" because no such mock exists. Please write a mock ' + depType + ' called "'
@@ -202,6 +206,12 @@
 		return html;
 	}
 
+	function quickmockLog(msg){
+		if(!quickmock.MUTE_LOGS){
+			console.log(msg);
+		}
+	}
+
 	var SNAKE_CASE_REGEXP = /[A-Z]/g;
 	function snake_case(name, separator) {
 		separator = separator || '-';
@@ -209,9 +219,6 @@
 			return (pos ? separator : '') + letter.toLowerCase();
 		});
 	}
-
-	quickmock.MOCK_PREFIX = mockPrefix;
-	quickmock.USE_ACTUAL = 'USE_ACTUAL_IMPLEMENTATION';
 
 	window.quickmock = quickmock;
 

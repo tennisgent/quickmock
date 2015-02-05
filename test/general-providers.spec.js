@@ -1,5 +1,7 @@
 (function(){
 
+	//TODO: Finish writing tests that define/test exact general providers api
+
 	describe('General Providers', function () {
 		var fakeController;
 
@@ -17,6 +19,14 @@
 					};
 				}
 			})
+			.service('FakeService2', function(){
+				return function(){
+					return {
+						func3: function(){},
+						func4: function(){}
+					};
+				}
+			})
 			.controller('FakeController', function(FakeFactory, FakeService){
 				this.someFactory = FakeFactory;
 				this.someService = FakeService;
@@ -24,10 +34,11 @@
 					FakeService.func1();
 				};
 			})
-			.controller('FakeController2', function($rootScope, FakeService){
-				$rootScope.someFunction = function someFunction(){
+			.controller('FakeController2', function($rootScope, FakeService, FakeService2){
+				$rootScope.someFunction = function(){
 					FakeService.func1();
 				};
+				FakeService2.func3();
 			});
 
 		angular.module('GeneralProvidersTestModuleMocks', [])
@@ -102,11 +113,11 @@
 				expect(initQuickMock).toThrow();
 			});
 
-			//it('should not throw an error if one of the provider\'s dependencies are not mocked but useActualDependencies flag is set', function(){
-			//	config.providerName = 'FakeController2';
-			//	config.useActualDependencies = true;
-			//	expect(initQuickMock).not.toThrow();
-			//});
+			it('should not throw an error if one of the provider\'s dependencies are not mocked but useActualDependencies flag is set', function(){
+				config.providerName = 'FakeController2';
+				config.useActualDependencies = true;
+				expect(initQuickMock).not.toThrow();
+			});
 
 		});
 
