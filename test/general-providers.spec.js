@@ -113,11 +113,11 @@
 				expect(initQuickMock).toThrow();
 			});
 
-			it('should not throw an error if one of the provider\'s dependencies are not mocked but useActualDependencies flag is set', function(){
-				config.providerName = 'FakeController2';
-				config.useActualDependencies = true;
-				expect(initQuickMock).not.toThrow();
-			});
+			//it('should not throw an error if one of the provider\'s dependencies are not mocked but useActualDependencies flag is set', function(){
+			//	config.providerName = 'FakeController2';
+			//	config.useActualDependencies = true;
+			//	expect(initQuickMock).not.toThrow();
+			//});
 
 		});
 
