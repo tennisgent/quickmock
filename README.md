@@ -145,7 +145,7 @@ angular.module('SampleMocks', [])
 	}])
 ```
 
-A detailed explanation of the two possible mock declaration syntaxes (and their advantages and disadvantages) can be found [here](https://github.com/tennisgent/quickmock/tree/master/test/mocks).
+A detailed explanation of the two possible mock declaration syntaxes (and their advantages and disadvantages) can be found [here](https://github.com/tennisgent/quickmock/tree/master/demo/mocks).
 
 For further information about how to write specific mocks to acurately mock out your providers, see [this SitePoint article](http://www.sitepoint.com/mocking-dependencies-angularjs-tests/) or the [Angular Developer Guide: Unit Testing](https://docs.angularjs.org/guide/unit-testing).
 
@@ -293,7 +293,7 @@ You might find that quickmock logs a fair amount of information to the console. 
 More In-depth Examples
 ----------------------
 
-The examples above are very simple. You will find more in-depth examples for each of the various provider types in the [`demo/app.js`]('https://github.com/tennisgent/QuickMock/blob/master/demo/app.js') file. Each of the providers in that file have their own quickmock test files that give more details on how to test them using quickmock. Each of these specs files are found in the [`specsUsingQuickMock`](https://github.com/tennisgent/quickmock/tree/master/test/specsUsingQuickMock) folder.
+The examples above are very simple. You will find more in-depth examples for each of the various provider types in the [`demo/app.js`](https://github.com/tennisgent/quickmock/blob/master/demo/app.js) file. Each of the providers in that file have their own quickmock test files that give more details on how to test them using quickmock. Each of these specs files are found in the [`specsUsingQuickMock`](https://github.com/tennisgent/quickmock/tree/master/demo/specsUsingQuickMock) folder.
 
 | Type  | Name | Spec File |
 | ------------- | ------------- | ------------- |
@@ -340,7 +340,8 @@ An example karma config file can be found [here](https://github.com/tennisgent/q
 files: [
     'vendor/angular.js',
     'vendor/angular-mocks.js',
-    'vendor/quickmock.js',
+    'src/quickmock.js',
+    'src/quickmock.mockHelper.js', // optional
     '<source code>.js',
     '<test specs>.js',
     '<any file(s) containing mocks>.js'
