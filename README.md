@@ -297,16 +297,16 @@ The examples above are very simple. You will find more in-depth examples for eac
 
 | Type  | Name | Spec File |
 | ------------- | ------------- | ------------- |
-| `service`  | `APIService` | [`apiService.spec.js`](https://github.com/tennisgent/quickmock/blob/master/test/specsUsingQuickMock/apiService.spec.js) |
-| `factory`  | `UserFormValidator` | [`userFormValidatorService.spec.js`](https://github.com/tennisgent/quickmock/blob/master/test/specsUsingQuickMock/userFormValidatorService.spec.js) |
-| `service`  | `NotificationService` | [`notificationService.spec.js`](https://github.com/tennisgent/quickmock/blob/master/test/specsUsingQuickMock/notificationService.spec.js) |
-| `controller`  | `FormController` | [`formController.spec.js`](https://github.com/tennisgent/quickmock/blob/master/test/specsUsingQuickMock/formController.spec.js) |
-| `directive`  | `zb-toggle` | [`zbToggleDirective.spec.js`](https://github.com/tennisgent/quickmock/blob/master/test/specsUsingQuickMock/zbToggleDirective.spec.js) |
-| `filter`  | `firstInitialLastName` | [`firstInitialLastNameFilter.spec.js`](https://github.com/tennisgent/quickmock/blob/master/test/specsUsingQuickMock/firstInitialLastNameFilter.spec.js) |
+| `service`  | `APIService` | [`apiService.spec.js`](https://github.com/tennisgent/quickmock/blob/master/demo/specsUsingQuickMock/apiService.spec.js) |
+| `factory`  | `UserFormValidator` | [`userFormValidatorService.spec.js`](https://github.com/tennisgent/quickmock/blob/master/demo/specsUsingQuickMock/userFormValidatorService.spec.js) |
+| `service`  | `NotificationService` | [`notificationService.spec.js`](https://github.com/tennisgent/quickmock/blob/master/demo/specsUsingQuickMock/notificationService.spec.js) |
+| `controller`  | `FormController` | [`formController.spec.js`](https://github.com/tennisgent/quickmock/blob/master/demo/specsUsingQuickMock/formController.spec.js) |
+| `directive`  | `zb-toggle` | [`zbToggleDirective.spec.js`](https://github.com/tennisgent/quickmock/blob/master/demo/specsUsingQuickMock/zbToggleDirective.spec.js) |
+| `filter`  | `firstInitialLastName` | [`firstInitialLastNameFilter.spec.js`](https://github.com/tennisgent/quickmock/blob/master/demo/specsUsingQuickMock/firstInitialLastNameFilter.spec.js) |
 
-For those who are curious, there are also examples of testing these same providers **without** using quickmock for comparison. These specs are found in the [`specsWithoutUsingQuickMock`](https://github.com/tennisgent/quickmock/tree/master/test/specsWithoutUsingQuickMock) folder.
+For those who are curious, there are also examples of testing these same providers **without** using quickmock (for comparison). These specs are found in the [`specsWithoutUsingQuickMock`](https://github.com/tennisgent/quickmock/tree/master/demo/specsWithoutUsingQuickMock) folder.
 
-You will also find example mocks for each of these providers, as well as mocks the angular `$promise`, `$http` and `$scope` services in the [`mocksModule.js`](https://github.com/tennisgent/quickmock/blob/master/test/mocksModule.js) file.
+You will also find example mocks for each of these providers, as well as mocks the angular `$promise`, `$http` and `$scope` services in the [`mocks`](https://github.com/tennisgent/quickmock/tree/master/demo/mocks) folder.
 
 
 Config and Run Blocks
