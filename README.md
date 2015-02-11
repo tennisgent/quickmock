@@ -363,6 +363,11 @@ In the `<head>` of the SpecRunner.html file, you will need to include references
 <script src="<test specs>.js"></script>
 ```
 
+More Info
+---------
+
+I recently gave a presentation at the [AngularJS Utah Meetup](http://www.meetup.com/AngularJS-Utah/) where I went over a basic introduction to testing, mocking and how to use quickmock. The slides for that presentation are [here](http://bit.ly/quickmock-slides). The YouTube video for the presentation will be posted soon.
+
 Ideas for Improvement?
 ----------------------
 If you have any ideas for how to make quickmock better, please submit them as pull requests.
