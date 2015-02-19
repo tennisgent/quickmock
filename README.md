@@ -1,7 +1,7 @@
 quickmock
 ======
 
-quickmock is a micro-library for initializing, mocking and auto-injecting provider dependencies for Jasmine/Mocha/Chai/Sinon unit tests in AngularJS
+quickmock is a micro-library for initializing, mocking and auto-injecting provider dependencies for Jasmine/Mocha/Chai/Sinon unit tests in AngularJS. View an introduction video by [clicking here](https://www.youtube.com/watch?v=1U_eA7fHtBo).
 
 
 What does it do?
@@ -406,7 +406,7 @@ In the `<head>` of the SpecRunner.html file, you will need to include references
 More Info
 ---------
 
-I recently gave a presentation at the [AngularJS Utah Meetup](http://www.meetup.com/AngularJS-Utah/) where I went over a basic introduction to testing, mocking and how to use quickmock. The slides for that presentation are [here](http://bit.ly/quickmock-slides). The YouTube video for the presentation will be posted soon.
+I recently gave a presentation at the [AngularJS Utah Meetup](http://www.meetup.com/AngularJS-Utah/) where I went over a basic introduction to testing, mocking and how to use quickmock. The slides for that presentation are [here](http://bit.ly/quickmock-slides). The presentation can be [watched on YouTube](https://www.youtube.com/watch?v=1U_eA7fHtBo). I apologize for the poor video quality.
 
 Ideas for Improvement?
 ----------------------
