@@ -285,11 +285,6 @@ it('should have an isolateScope', function(){
 });
 ```
 
-How do I shut it up?
---------------------
-
-You might find that quickmock logs a fair amount of information to the console. This is simply to make sure that you know what is happening behind the scenes and are aware of any possible warnings that might pop up. If you wish to turn off logging, you can simply set the `quickmock.MUTE_LOGS` flag to `true`. This will disable the logs and you won't see any data from quickmock output to the console. This DOES NOT, however, turn off exceptions that may be thrown as a result of required parameters not being available, such as `angular` being `undefined` or if you're missing required config parameters.
-
 More In-depth Examples
 ----------------------
 
@@ -307,6 +302,51 @@ The examples above are very simple. You will find more in-depth examples for eac
 For those who are curious, there are also examples of testing these same providers **without** using quickmock (for comparison). These specs are found in the [`specsWithoutUsingQuickMock`](https://github.com/tennisgent/quickmock/tree/master/demo/specsWithoutUsingQuickMock) folder.
 
 You will also find example mocks for each of these providers, as well as mocks the angular `$promise`, `$http` and `$scope` services in the [`mocks`](https://github.com/tennisgent/quickmock/tree/master/demo/mocks) folder.
+
+How do I shut it up?
+--------------------
+
+You might find that quickmock logs a fair amount of information to the console. This is simply to make sure that you know what is happening behind the scenes and are aware of any possible warnings that might pop up. If you wish to turn off logging, you can simply set the `quickmock.MUTE_LOGS` flag to `true`. This will disable the logs and you won't see any data from quickmock output to the console. This DOES NOT, however, turn off exceptions that may be thrown as a result of required parameters not being available, such as `angular` being `undefined` or if you're missing required config parameters.
+
+
+It keeps saying "Cannot inject mock for *X*" ... WTF?
+-----------------------------------------------------
+
+quickmock will throw exceptions if the provider you are trying to test has a dependency that does not have a mock registered for it. This exception is thrown so that you don't accidentally execute a test using the actual implementation of a dependency when you meant to have provided a mock for it.  However, there are certainly times where you might want to use the actual implementation of a provider instead of its mock. For example, if your provider depends on `$http`, you may want to use the mock for `$http` provided by angular's `ngMock` module instead of providing your own mock. There are three ways to handle this scenario:
+
+1. `useActualDependencies: true` - This tells quickmock to always default to using the actual implemenations of providers whenever it can't find its associated mock. **Be careful using this flag because it can be easy to assume you are using mocks for all of your dependencies when in reality you aren't.** If you accidentally forget to provide a mock for any other dependencies, quickmock will use the implementation and you won't know any different.
+```javascript
+quickmock({
+	providerName: '...',
+	moduleName: '...',
+	useActualDependencies: true
+});
+```
+2. `mocks: {...}` - This config object will override any mock provided by any other module. You can either provide a mock for a provider, or set a given dependency to `quickmock.USE_ACTUAL`, which will use the actual implementaiton of that specific mock, but still require mocks to be provided for all other dependencies.
+```javascript
+quickmock({
+	providerName: '...',
+	moduleName: '...',
+	mocks: {
+		$http: quickmock.USE_ACTUAL,           // uses actual implementation of $http
+		MyOtherDependency: 'someStringValue'   // uses "someStringValue" instead of mock for MyOtherDependency
+	}
+});
+```
+3. Register a wrapper mock - Simply register a wrapped mock for the given dependency. This is a little tedious, but if you are constantly deferring to a given dependency's actual implementation, this saves you from having to set the config flag every time you write a new test.
+```javascript
+angular.module('SomeMocks', [])
+	.mockService('$http', function($http){
+		return $http;   // returns the actual implemenation of $http
+	});
+
+quickmock({
+	providerName: '...',
+	moduleName: '...',
+	mockModules: ['SomeMocks']
+});
+```
+
 
 
 Config and Run Blocks
