@@ -12,13 +12,17 @@
 	}
 
 	function mockProvider(){
-		var allModules = opts.mockModules.concat(['ngMock', opts.moduleName]),
-			injector = angular.injector(allModules),
+		var allModules = opts.mockModules.concat(['ngMock']),
+			injector = angular.injector(allModules.concat([opts.moduleName])),
 			modObj = angular.module(opts.moduleName),
-			invokeQueue = modObj._invokeQueue,
+			invokeQueue = modObj._invokeQueue || [],
 			providerType = getProviderType(opts.providerName, invokeQueue),
 			mocks = {},
 			provider = {};
+
+		angular.forEach(allModules || [], function(modName){
+			invokeQueue = invokeQueue.concat(angular.module(modName)._invokeQueue);
+		});
 
 		if(providerType){
 			// Loop through invokeQueue, find this provider's dependencies and prefix
@@ -104,13 +108,15 @@
 				if(injector.has(mockPrefix + depName)){
 					mockServiceName = mockPrefix + depName;
 					currProviderDeps[i] = mockServiceName;
+				}else{
+					console.log('quickmock: Using actual implementation of "' + depName + '" ' + depType + ' instead of mock');
 				}
 			}else if(depName.indexOf(mockPrefix) !== 0){
 				mockServiceName = mockPrefix + depName;
 				currProviderDeps[i] = mockServiceName;
 			}
 			if(!injector.has(mockServiceName)){
-				if(depType === 'value' || depType === 'constant' || opts.useActualDependencies){
+				if(opts.useActualDependencies){
 					quickmockLog('quickmock: Using actual implementation of "' + depName + '" ' + depType + ' instead of mock');
 					mockServiceName = mockServiceName.replace(mockPrefix, '');
 				}else {
@@ -132,9 +138,11 @@
 			providerData[2][1] = annotatedDependencies;
 		}
 		var currProviderDeps = providerData[2][1];
-		for(var i=0; i<currProviderDeps.length - 1; i++){
-			if(currProviderDeps[i].indexOf(mockPrefix) === 0){
-				currProviderDeps[i] = currProviderDeps[i].replace(mockPrefix, '');
+		if(angular.isArray(currProviderDeps)){
+			for(var i=0; i<currProviderDeps.length - 1; i++){
+				if(currProviderDeps[i].indexOf(mockPrefix) === 0){
+					currProviderDeps[i] = currProviderDeps[i].replace(mockPrefix, '');
+				}
 			}
 		}
 	}
