@@ -115,7 +115,7 @@
 					mockServiceName = mockPrefix + depName;
 					currProviderDeps[i] = mockServiceName;
 				}else{
-					console.log('quickmock: Using actual implementation of "' + depName + '" ' + depType + ' instead of mock');
+					quickmockLog('quickmock: Using actual implementation of "' + depName + '" ' + depType + ' instead of mock');
 				}
 			}else if(depName.indexOf(mockPrefix) !== 0){
 				mockServiceName = mockPrefix + depName;
