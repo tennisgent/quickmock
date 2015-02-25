@@ -34,7 +34,6 @@
 					for(var i=0; i<currProviderDeps.length - 1; i++){
 						var depName = currProviderDeps[i];
 						mocks[depName] = getMockForProvider(depName, currProviderDeps, i);
-						console.log();
 					}
 				}
 			});
@@ -88,6 +87,7 @@
 			var $compile = injector.get('$compile');
 			provider.$scope = injector.get('$rootScope').$new();
 			provider.$mocks = mocks;
+
 			provider.$compile = function quickmockCompile(html){
 				html = html || opts.html;
 				if(!html){
@@ -97,7 +97,9 @@
 					html = generateHtmlStringFromObj(html);
 				}
 				provider.$element = angular.element(html);
+				prefixProviderDependencies(opts.providerName, invokeQueue);
 				$compile(provider.$element)(provider.$scope);
+				prefixProviderDependencies(opts.providerName, invokeQueue, true);
 				provider.$isoScope = provider.$element.isolateScope();
 				provider.$scope.$digest();
 			};
@@ -200,6 +202,23 @@
 			}
 		}
 		return null;
+	}
+
+	function prefixProviderDependencies(providerName, invokeQueue, unprefix){
+		angular.forEach(invokeQueue, function(providerData){
+			if(providerData[2][0] === providerName && providerData[2][0].indexOf(mockPrefix) === -1){
+				var currProviderDeps = providerData[2][1];
+				if(angular.isArray(currProviderDeps)){
+					for(var i=0; i<currProviderDeps.length - 1; i++){
+						if(unprefix){
+							currProviderDeps[i] = currProviderDeps[i].replace(mockPrefix, '');
+						}else if(currProviderDeps[i].indexOf(mockPrefix) !== 0){
+							currProviderDeps[i] = mockPrefix + currProviderDeps[i];
+						}
+					}
+				}
+			}
+		});
 	}
 
 	function generateHtmlStringFromObj(html){
