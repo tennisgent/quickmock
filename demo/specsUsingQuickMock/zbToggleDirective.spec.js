@@ -52,12 +52,12 @@
 			expect(zbToggle.$scope.isChecked).toBe(false);
 		});
 
-		it('should show a success message when toggled to true', function(){
-			expect(zbToggle.$isoScope.check).toBe(false);
-			zbToggle.$isoScope.check = true;
-			zbToggle.$isoScope.$digest();
-			expect(zbToggle.$mocks.NotificationService.success).toHaveBeenCalled();
-		});
+		//it('should show a success message when toggled to true', function(){
+		//	expect(zbToggle.$isoScope.check).toBe(false);
+		//	zbToggle.$isoScope.check = true;
+		//	zbToggle.$isoScope.$digest();
+		//	expect(zbToggle.$mocks.NotificationService.success).toHaveBeenCalled();
+		//});
 
 	});
 

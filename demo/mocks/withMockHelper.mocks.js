@@ -19,8 +19,8 @@
 				var promise = this;
 				angular.forEach(['success','error'], function(method){
 					promise[method] = jasmine.createSpy('$promise.' + method);
-					promise[method].callback = function(argument){
-						promise[method].calls.mostRecent().args[0](argument);
+					promise[method].$callback = function(){
+						promise[method].calls.mostRecent().args[0].apply(this, arguments);
 					};
 				});
 			}
@@ -32,8 +32,8 @@
 			var methods = ['get', 'put', 'post', 'delete'],
 				spyObj = jasmine.createSpyObj('$http', methods);
 			angular.forEach(methods, function(method){
-				spyObj[method].calls.mostRecentPromise = new MockHttpPromise();
-				spyObj[method].and.returnValue(spyObj[method].calls.mostRecentPromise);
+				spyObj[method].$promise = new MockHttpPromise();
+				spyObj[method].and.returnValue(spyObj[method].$promise);
 			});
 			return spyObj;
 		}])
@@ -47,7 +47,7 @@
 		}])
 
 		.mockService('APIService', ['___$http', function(mockHttp){
-			return mockHttp;
+			return angular.copy(mockHttp);
 		}])
 
 		.mockService('UserFormValidator', [function(){

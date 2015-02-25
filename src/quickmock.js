@@ -28,15 +28,13 @@
 			// Loop through invokeQueue, find this provider's dependencies and prefix
 			// them so Angular will inject the mocked versions
 			angular.forEach(invokeQueue, function(providerData){
-				// Remove any prefixed dependencies that persisted from a previous call,
-				// and check for any non-annotated services
-				sanitizeProvider(providerData, injector);
 				var currProviderName = providerData[2][0];
 				if(currProviderName === opts.providerName){
 					var currProviderDeps = providerData[2][1];
 					for(var i=0; i<currProviderDeps.length - 1; i++){
 						var depName = currProviderDeps[i];
 						mocks[depName] = getMockForProvider(depName, currProviderDeps, i);
+						console.log();
 					}
 				}
 			});
@@ -47,6 +45,12 @@
 				setupInitializer();
 			}
 		}
+
+		angular.forEach(invokeQueue, function(providerData) {
+			// Remove any prefixed dependencies that persisted from a previous call,
+			// and check for any non-annotated services
+			sanitizeProvider(providerData, injector);
+		});
 
 		return provider;
 
@@ -129,19 +133,21 @@
 	}
 
 	function sanitizeProvider(providerData, injector){
-		if(angular.isFunction(providerData[2][1])){
-			// provider declaration function has been provided without the array annotation,
-			// so we need to annotate it so the invokeQueue can be prefixed
-			var annotatedDependencies = injector.annotate(providerData[2][1]);
-			delete providerData[2][1].$inject;
-			annotatedDependencies.push(providerData[2][1]);
-			providerData[2][1] = annotatedDependencies;
-		}
-		var currProviderDeps = providerData[2][1];
-		if(angular.isArray(currProviderDeps)){
-			for(var i=0; i<currProviderDeps.length - 1; i++){
-				if(currProviderDeps[i].indexOf(mockPrefix) === 0){
-					currProviderDeps[i] = currProviderDeps[i].replace(mockPrefix, '');
+		if(angular.isString(providerData[2][0]) && providerData[2][0].indexOf(mockPrefix) === -1){
+			if(angular.isFunction(providerData[2][1])){
+				// provider declaration function has been provided without the array annotation,
+				// so we need to annotate it so the invokeQueue can be prefixed
+				var annotatedDependencies = injector.annotate(providerData[2][1]);
+				delete providerData[2][1].$inject;
+				annotatedDependencies.push(providerData[2][1]);
+				providerData[2][1] = annotatedDependencies;
+			}
+			var currProviderDeps = providerData[2][1];
+			if(angular.isArray(currProviderDeps)){
+				for(var i=0; i<currProviderDeps.length - 1; i++){
+					if(currProviderDeps[i].indexOf(mockPrefix) === 0){
+						currProviderDeps[i] = currProviderDeps[i].replace(mockPrefix, '');
+					}
 				}
 			}
 		}
