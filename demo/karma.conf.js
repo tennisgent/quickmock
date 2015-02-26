@@ -20,8 +20,8 @@ module.exports = function (config) {
 			'src/quickmock.js',
 			'src/quickmock.mockHelper.js',
 			'demo/app.js',
-			'demo/specsWithoutUsingQuickMock/*.spec.js',
-			'demo/specsUsingQuickMock/*.spec.js',
+			//'demo/specsWithoutUsingQuickMock/*.spec.js',
+			'demo/specsUsingQuickMock/apiService.spec.js',
 			'demo/mocks/withMockHelper.mocks.js'
 		],
 

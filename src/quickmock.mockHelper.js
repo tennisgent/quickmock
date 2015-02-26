@@ -30,7 +30,7 @@
 
 		function basicMock(providerName, initFunc, providerType){
 			hasBeenMocked[providerName] = true;
-			var newModObj = modObj[providerType](quickmock.MOCK_PREFIX + providerName, initFunc);
+			var newModObj = modObj[providerType](quickmock.getMockPrefix() + providerName, initFunc);
 			return decorateAngularModuleObject(newModObj);
 		}
 
