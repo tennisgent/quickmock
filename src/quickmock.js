@@ -70,7 +70,6 @@
 		.service('quickmock', ['global','AssertRequiredOptions', 'MockOutProvider','GetProviderType',
 			function(global, assertRequiredOptions, mockOutProvider, getProviderType){
 				return function quickmock(opts){
-
 					var options = assertRequiredOptions(opts),
 						allModules = opts.mockModules.concat(['ngMock']),
 						injector = angular.injector(allModules.concat([opts.moduleName])),
@@ -150,14 +149,16 @@
 			}
 		])
 
-		.service('InitializeProvider', ['global','$controller','$filter',
-			function(global, $controller, $filter){
-				return function initializeProvider(providerType){
+		.service('InitializeProvider', ['global',
+			function(global){
+				return function initializeProvider(){
 					var providerName = global.options().providerName;
-					switch(providerType){
+					switch(global.providerType()){
 						case 'controller':
+                            var $controller = global.injector().get('$controller');
 							return $controller(providerName, global.mocks());
 						case 'filter':
+                            var $filter = global.injector().get('$filter');
 							return $filter(providerName);
 						default:
 							return global.injector().get(providerName);
@@ -202,7 +203,7 @@
 						mockServiceName = mockPrefix + depName;
 						currProviderDeps[i] = mockServiceName;
 					}
-					if(injector.has(mockServiceName)){
+					if(!injector.has(mockServiceName)){
 						if(opts.useActualDependencies){
 							quickmockLog('quickmock: Using actual implementation of "' + depName + '" ' + depType + ' instead of mock');
 							mockServiceName = mockServiceName.replace(mockPrefix, '');
@@ -228,11 +229,12 @@
 			}
 		])
 
-		.service('QuickmockCompile', ['global', 'GenerateHtmlStringFromObject','PrefixProviderDependencies','UnprefixProviderDependencies','$compile',
-			function(global, generateHtmlStringFromObject, prefixProviderDependencies, unprefixProviderDependencies, $compile){
+		.service('QuickmockCompile', ['global', 'GenerateHtmlStringFromObject','PrefixProviderDependencies','UnprefixProviderDependencies',
+			function(global, generateHtmlStringFromObject, prefixProviderDependencies, unprefixProviderDependencies){
 				return function(provider){
 					return function quickmockCompile(html){
-						var opts = global.options();
+						var opts = global.options(),
+                            $compile = global.injector().get('$compile');
 						html = html || opts.html;
 						if(!html){
 							throw new Error('quickmock: Cannot compile "' + opts.providerName + '" directive. No html string/object provided.');
