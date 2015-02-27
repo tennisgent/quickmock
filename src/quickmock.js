@@ -2,7 +2,7 @@
 
 
 
-	angular.module('quickmock', ['ngMock'])
+	var app = angular.module('quickmock', ['ngMock'])
 
 		.run(['quickmock','global',
 			function(quickmock, global){
@@ -18,64 +18,36 @@
 
 		.factory('global', [
 			function() {
-                var vars = {
-                    options: null,
-                    mockPrefix: '___',
-                    allModules: null,
-                    injector: null,
-                    modObj: null,
-                    providerType: null,
-                    mocks: null,
-                    provider: null
-                    useActual: 'USE_ACTUAL_IMPLEMENTATION',
-                    muteLogs: false
-                };
-				var options, mockPrefix, allModules, injector, modObj, providerType, mocks, provider,
-					USE_ACTUAL = 'USE_ACTUAL_IMPLEMENTATION',
-					MUTE_LOGS = false;
-				return {
-					options: function () {
-						return arguments.length ? (options = arguments[0]) : options;
-					},
-					mockPrefix: function () {
-						return arguments.length ? (mockPrefix = arguments[0]) : (mockPrefix || '___');
-					},
-					allModules: function () {
-						return arguments.length ? (allModules = arguments[0]) : allModules;
-					},
-					injector: function () {
-						return arguments.length ? (injector = arguments[0]) : injector;
-					},
-					modObj: function () {
-						return arguments.length ? (modObj = arguments[0]) : modObj;
-					},
-					invokeQueue: function () {
-						return arguments.length ? (modObj._invokeQueue = arguments[0]) : modObj._invokeQueue;
-					},
-					getFromInvokeQueue: function (providerName){
-						for(var i=0; i<modObj._invokeQueue.length; i++){
-							var providerData = modObj._invokeQueue[i];
-							if (providerData[2][0] === providerName) {
-								return providerData;
-							}
+                var methods = {},
+					globalVars = {
+						options: null,
+						mockPrefix: '___',
+						allModules: null,
+						injector: null,
+						modObj: null,
+						providerType: null,
+						mocks: null,
+						provider: null,
+						useActual: 'USE_ACTUAL_IMPLEMENTATION',
+						muteLogs: false
+					};
+				angular.forEach(globalVars, function(globalVar, globalVarName){
+					methods[globalVarName] = function(){
+						return arguments.length ? (globalVars[globalVarName] = arguments[0]) : globalVars[globalVarName];
+					}
+				});
+				methods.getFromInvokeQueue = function(providerName){
+					for(var i=0; i<globalVars.modObj._invokeQueue.length; i++){
+						var providerData = globalVars.modObj._invokeQueue[i];
+						if (providerData[2][0] === providerName) {
+							return providerData;
 						}
-					},
-					providerType: function () {
-						return arguments.length ? (providerType = arguments[0]) : providerType;
-					},
-					mocks: function () {
-						return arguments.length ? (mocks = arguments[0]) : mocks;
-					},
-					provider: function () {
-						return arguments.length ? (provider = arguments[0]) : provider;
-					},
-					useActual: function () {
-						return arguments.length ? (USE_ACTUAL = arguments[0]) : USE_ACTUAL;
-					},
-					muteLogs: function () {
-						return arguments.length ? (MUTE_LOGS = arguments[0]) : MUTE_LOGS;
 					}
 				};
+				methods.invokeQueue = function () {
+					return arguments.length ? (globalVars.modObj._invokeQueue = arguments[0]) : globalVars.modObj._invokeQueue;
+				};
+				return methods;
 			}
 		])
 
@@ -341,6 +313,15 @@
 				};
 			}
 		])
+
+		.value('ProviderType', {
+			directive: 'directive',
+			service: 'service',
+			value: 'value',
+			constant: 'constant',
+
+
+		})
 
 		.service('PrefixProviderDependencies', ['global',
 			function(global){
