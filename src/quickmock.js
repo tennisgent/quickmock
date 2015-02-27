@@ -18,6 +18,18 @@
 
 		.factory('global', [
 			function() {
+                var vars = {
+                    options: null,
+                    mockPrefix: '___',
+                    allModules: null,
+                    injector: null,
+                    modObj: null,
+                    providerType: null,
+                    mocks: null,
+                    provider: null
+                    useActual: 'USE_ACTUAL_IMPLEMENTATION',
+                    muteLogs: false
+                };
 				var options, mockPrefix, allModules, injector, modObj, providerType, mocks, provider,
 					USE_ACTUAL = 'USE_ACTUAL_IMPLEMENTATION',
 					MUTE_LOGS = false;
