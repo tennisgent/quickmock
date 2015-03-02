@@ -1,8 +1,6 @@
 (function(angular){
 
-
-
-	var app = angular.module('quickmock', ['ngMock'])
+	angular.module('quickmock', ['ngMock'])
 
 		.run(['quickmock','global',
 			function(quickmock, global){
@@ -36,14 +34,6 @@
 						return arguments.length ? (globalVars[globalVarName] = arguments[0]) : globalVars[globalVarName];
 					}
 				});
-				methods.getFromInvokeQueue = function(providerName){
-					for(var i=0; i<globalVars.modObj._invokeQueue.length; i++){
-						var providerData = globalVars.modObj._invokeQueue[i];
-						if (providerData[2][0] === providerName) {
-							return providerData;
-						}
-					}
-				};
 				methods.invokeQueue = function () {
 					return arguments.length ? (globalVars.modObj._invokeQueue = arguments[0]) : globalVars.modObj._invokeQueue;
 				};
@@ -78,6 +68,20 @@
 			}
 		])
 
+        .service('GetFromInvokeQueue', ['global',
+            function(global){
+                return function getFromInvokeQueue(providerName){
+                    var invokeQueue = global.invokeQueue();
+                    for(var i=0; i<invokeQueue.length; i++){
+                        var providerData = invokeQueue[i];
+                        if (providerData[2][0] === providerName) {
+                            return providerData;
+                        }
+                    }
+                };
+            }
+        ])
+
 		.service('AssertRequiredOptions', ['$window',
 			function($window){
 				return function assertRequiredOptions(options){
@@ -102,14 +106,8 @@
 				return function mockOutProvider(){
 					var provider = {};
 					if(global.providerType()){
-						var mocks = getAllMocksForProvider(global.options().providerName);
-						global.mocks(mocks);
-
-						if(global.providerType() === 'directive'){
-							provider = setupDirective();
-						}else{
-							provider = setupInitializer();
-						}
+						global.mocks(getAllMocksForProvider(global.options().providerName));
+                        provider = setupInitializer();
 					}
 					angular.forEach(global.invokeQueue(), function(providerData) {
 						sanitizeProvider(providerData);
@@ -133,17 +131,19 @@
 			}
 		])
 
-		.service('InitializeProvider', ['global',
-			function(global){
+		.service('InitializeProvider', ['global','ProviderType','SetupDirective',
+			function(global, ProviderType, setupDirective){
 				return function initializeProvider(){
 					var providerName = global.options().providerName;
 					switch(global.providerType()){
-						case 'controller':
+						case ProviderType.controller:
                             var $controller = global.injector().get('$controller');
 							return $controller(providerName, global.mocks());
-						case 'filter':
+						case ProviderType.filter:
                             var $filter = global.injector().get('$filter');
 							return $filter(providerName);
+                        case ProviderType.directive:
+                            return setupDirective();
 						default:
 							return global.injector().get(providerName);
 					}
@@ -151,11 +151,11 @@
 			}
 		])
 
-		.service('GetAllMocksForProvider', ['global', 'GetMockForDependency',
-			function(global, getMockForDependency){
+		.service('GetAllMocksForProvider', ['global', 'GetMockForDependency','GetFromInvokeQueue',
+			function(global, getMockForDependency, getFromInvokeQueue){
 				return function getAllMocksForProvider(providerName){
 					var mocks = {},
-						providerData = global.getFromInvokeQueue(providerName),
+						providerData = getFromInvokeQueue(providerName),
 						currProviderDeps = providerData[2][1];
 					for(var i=0; i<currProviderDeps.length - 1; i++){
 						var depName = currProviderDeps[i];
@@ -166,8 +166,8 @@
 			}
 		])
 
-		.service('GetMockForDependency', ['global','GetProviderType','QuickmockLog',
-			function(global, getProviderType, quickmockLog){
+		.service('GetMockForDependency', ['global','GetProviderType','QuickmockLog','ProviderType',
+			function(global, getProviderType, quickmockLog, ProviderType){
 				return function getMockForDependency(depName, currProviderDeps, i){
 					var opts = global.options(),
 						injector = global.injector(),
@@ -176,7 +176,7 @@
 						mockServiceName = depName;
 					if(opts.mocks[mockServiceName] && opts.mocks[mockServiceName] === global.useActual()){
 						quickmockLog('quickmock: Using actual implementation of "' + depName + '" ' + depType + ' instead of mock');
-					}else if(depType === 'value' || depType === 'constant'){
+					}else if(depType === ProviderType.value || depType === ProviderType.constant){
 						if(injector.has(mockPrefix + depName)){
 							mockServiceName = mockPrefix + depName;
 							currProviderDeps[i] = mockServiceName;
@@ -288,28 +288,23 @@
 			}
 		])
 
-		.service('GetProviderType', ['global',
-			function(global){
+		.service('GetProviderType', ['global','ProviderType','GetFromInvokeQueue',
+			function(global, ProviderType, getFromInvokeQueue){
 				return function getProviderType(providerName){
-					var invokeQueue = global.invokeQueue();
-					for(var i=0; i<invokeQueue.length; i++){
-						var providerInfo = invokeQueue[i];
-						if(providerInfo[2][0] === providerName){
-							switch(providerInfo[0]){
-								case '$provide':
-									return providerInfo[1];
-								case '$controllerProvider':
-									return 'controller';
-								case '$compileProvider':
-									return 'directive';
-								case '$filterProvider':
-									return 'filter';
-								case '$animateProvider':
-									return 'animation';
-							}
-						}
-					}
-					return null;
+					var providerData = getFromInvokeQueue(providerName);
+                    switch(providerData && providerData[0]){
+                        case '$provide':
+                            return providerData[1];
+                        case '$controllerProvider':
+                            return ProviderType.controller;
+                        case '$compileProvider':
+                            return ProviderType.directive;
+                        case '$filterProvider':
+                            return ProviderType.filter;
+                        case '$animateProvider':
+                            return ProviderType.animation;
+                    }
+					return '';
 				};
 			}
 		])
@@ -319,28 +314,30 @@
 			service: 'service',
 			value: 'value',
 			constant: 'constant',
-
-
+            controller: 'controller',
+            filter: 'filter',
+            animation: 'animation',
+            provider: 'provider'
 		})
 
-		.service('PrefixProviderDependencies', ['global',
-			function(global){
+		.service('PrefixProviderDependencies', ['global','GetFromInvokeQueue',
+			function(global, getFromInvokeQueue){
 				return function prefixProviderDependencies(providerName, unprefix){
-					var mockPrefix = global.mockPrefix();
-					angular.forEach(global.invokeQueue(), function(providerData){
-						if(providerData[2][0] === providerName && providerData[2][0].indexOf(mockPrefix) === -1){
-							var currProviderDeps = providerData[2][1];
-							if(angular.isArray(currProviderDeps)){
-								for(var i=0; i<currProviderDeps.length - 1; i++){
-									if(unprefix){
-										currProviderDeps[i] = currProviderDeps[i].replace(global.mockPrefix(), '');
-									}else if(currProviderDeps[i].indexOf(mockPrefix) !== 0){
-										currProviderDeps[i] = global.mockPrefix() + currProviderDeps[i];
-									}
-								}
-							}
-						}
-					});
+                    if(providerName.indexOf(global.mockPrefix()) === 0){
+                        return false;
+                    }
+					var mockPrefix = global.mockPrefix(),
+                        providerData = getFromInvokeQueue(providerName),
+                        currProviderDeps = providerData[2][1];
+                    if(angular.isArray(currProviderDeps)){
+                        for(var i=0; i<currProviderDeps.length - 1; i++){
+                            if(unprefix){
+                                currProviderDeps[i] = currProviderDeps[i].replace(mockPrefix, '');
+                            }else if(currProviderDeps[i].indexOf(mockPrefix) !== 0){
+                                currProviderDeps[i] = mockPrefix + currProviderDeps[i];
+                            }
+                        }
+                    }
 				};
 			}
 		])
