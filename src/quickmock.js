@@ -82,6 +82,20 @@
             }
         ])
 
+        .service('ReplaceInInvokeQueue', ['global',
+            function(global){
+                return function getFromInvokeQueue(providerName, newProviderData){
+                    var invokeQueue = global.invokeQueue();
+                    for(var i=0; i<invokeQueue.length; i++){
+                        var providerData = invokeQueue[i];
+                        if (providerData[2][0] === providerName) {
+                            invokeQueue[i] = newProviderData;
+                        }
+                    }
+                };
+            }
+        ])
+
 		.service('AssertRequiredOptions', ['$window',
 			function($window){
 				return function assertRequiredOptions(options){
@@ -159,16 +173,16 @@
 						currProviderDeps = providerData[2][1];
 					for(var i=0; i<currProviderDeps.length - 1; i++){
 						var depName = currProviderDeps[i];
-						mocks[depName] = getMockForDependency(depName, currProviderDeps, i);
+						mocks[depName] = getMockForDependency(depName, providerData, i);
 					}
 					return mocks;
 				};
 			}
 		])
 
-		.service('GetMockForDependency', ['global','GetProviderType','QuickmockLog','ProviderType',
-			function(global, getProviderType, quickmockLog, ProviderType){
-				return function getMockForDependency(depName, currProviderDeps, i){
+		.service('GetMockForDependency', ['global','GetProviderType','QuickmockLog','ProviderType','ReplaceInInvokeQueue',
+			function(global, getProviderType, quickmockLog, ProviderType, replaceInInvokeQueue){
+				return function getMockForDependency(depName, providerData, i){
 					var opts = global.options(),
 						injector = global.injector(),
 						mockPrefix = global.mockPrefix(),
@@ -179,13 +193,13 @@
 					}else if(depType === ProviderType.value || depType === ProviderType.constant){
 						if(injector.has(mockPrefix + depName)){
 							mockServiceName = mockPrefix + depName;
-							currProviderDeps[i] = mockServiceName;
+							providerData[2][1][i] = mockServiceName;
 						}else{
 							quickmockLog('quickmock: Using actual implementation of "' + depName + '" ' + depType + ' instead of mock');
 						}
-					}else if(depName.indexOf(mockPrefix) !== 0){
+					}else if(depName.indexOf(mockPrefix) !== 0 || depType === ProviderType.unknown){
 						mockServiceName = mockPrefix + depName;
-						currProviderDeps[i] = mockServiceName;
+                        providerData[2][1][i] = mockServiceName;
 					}
 					if(!injector.has(mockServiceName)){
 						if(opts.useActualDependencies){
@@ -304,7 +318,7 @@
                         case '$animateProvider':
                             return ProviderType.animation;
                     }
-					return '';
+					return ProviderType.unknown;
 				};
 			}
 		])
@@ -317,7 +331,8 @@
             controller: 'controller',
             filter: 'filter',
             animation: 'animation',
-            provider: 'provider'
+            provider: 'provider',
+            unknown: 'unknown'
 		})
 
 		.service('PrefixProviderDependencies', ['global','GetFromInvokeQueue',
