@@ -9,7 +9,11 @@
             .value('GetProviderType', jasmine.createSpy('GetProviderType'));
 
 		describe('quickmock service', function () {
-			var qm, mocks, fakeOptions;
+			var qm, mocks, fakeOptions = {
+				providerName: 'someProvider',
+				moduleName: 'someModule',
+				mockModules: ['someModules']
+			};
 
             beforeEach(function(){
                 module('quickmock');
@@ -22,11 +26,7 @@
                     mocks.MockOutProvider = MockOutProvider;
                     mocks.GetProviderType = GetProviderType;
                 });
-                fakeOptions = {
-                    providerName: 'someProvider',
-                    moduleName: 'someModule',
-                    mockModules: ['someModules']
-                };
+				mocks.GetProviderType.and.returnValue('someType');
                 spyOn(angular, 'injector').and.returnValue({});
                 spyOn(angular, 'module').and.callFake(function(modName){
                     return {_invokeQueue: [modName]};
@@ -44,9 +44,30 @@
                 expect(mocks.AssertRequiredOptions).toHaveBeenCalledWith(fakeOptions);
             });
 
-            it('should concatenate all invokeQueues and set them as global', function(){
-                expect(mocks.global.invokeQueue).toHaveBeenCalledWith(['someModule','someModules','ngMock']);
-            });
+			it('should get the provider type', function(){
+				qm(fakeOptions);
+				expect(mocks.GetProviderType).toHaveBeenCalledWith(fakeOptions.providerName);
+			});
+
+			var global = {
+				options: fakeOptions,
+				allModules: fakeOptions.mockModules.concat(['ngMock']),
+				injector: {},
+				modObj: {_invokeQueue: ['someModule']},
+				invokeQueue: ['someModule','someModules','ngMock'],
+				providerType: 'someType',
+				mocks: {},
+				provider: {}
+			};
+
+			angular.forEach(global, function(expectedValue, property){
+
+				it('should set the global ' + property + ' property to the proper value', function(){
+					qm(fakeOptions);
+					expect(mocks.global[property]).toHaveBeenCalledWith(expectedValue);
+				});
+
+			});
 
 		});
 
