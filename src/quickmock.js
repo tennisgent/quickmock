@@ -324,6 +324,7 @@
 		])
 
 		.value('ProviderType', {
+			factory: 'factory',
 			directive: 'directive',
 			service: 'service',
 			value: 'value',
