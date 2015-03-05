@@ -19,11 +19,16 @@
 					moduleName: 'someModule',
 					mockModules: ['someModules']
 				},
-				ThrowError: jasmine.createSpy('ThrowError')
+				ThrowError: jasmine.createSpy('ThrowError'),
+                GetAllMocksForProvider: jasmine.createSpy('GetAllMocksForProvider'),
+                SetupDirective: jasmine.createSpy('SetupDirective'),
+                SetupInitializer: jasmine.createSpy('SetupInitializer'),
+                SanitizeProvider: jasmine.createSpy('SanitizeProvider')
 			};
 			mocks.GetProviderType.and.returnValue('someType');
 			mocks.AssertRequiredOptions.and.returnValue(mocks.options);
 			mocks.global.invokeQueue.and.returnValue(mocks.invokeQueue);
+            mocks.global.options.and.returnValue(mocks.options);
 			return mockName ? mocks[mockName] : mocks;
 		}
 
@@ -34,10 +39,9 @@
 				mocks = getMocks();
 				module('quickmock');
 				module(function($provide){
-					$provide.value('global', mocks.global);
-					$provide.value('AssertRequiredOptions', mocks.AssertRequiredOptions);
-					$provide.value('MockOutProvider', mocks.MockOutProvider);
-					$provide.value('GetProviderType', mocks.GetProviderType);
+                    angular.forEach(['global','AssertRequiredOptions','MockOutProvider','GetProviderType'], function(mock){
+                        $provide.value(mock, mocks[mock]);
+                    });
 				});
                 inject(function(quickmock){
 					qm = quickmock;
@@ -119,15 +123,16 @@
 
 			beforeEach(function(){
 				mocks = getMocks();
+                mocks.$window = {};
 				module('quickmock');
 				module(function($provide){
 					$provide.value('ThrowError', mocks.ThrowError);
+                    $provide.value('$window', mocks.$window);
 				});
-			    inject(function(AssertRequiredOptions, $window, ErrorMessages){
+			    inject(function(AssertRequiredOptions, ErrorMessages){
 					assertRequirdOptions = AssertRequiredOptions;
-					mocks.$window = $window;
 					mocks.errorMessage = ErrorMessages;
-				})
+				});
 			});
 
 			it('should throw an exception when angular is not available', function(){
@@ -137,6 +142,39 @@
 			});
 
 		});
+
+        describe('MockOutProvider', function () {
+            var mockOutProvider, mocks;
+
+            beforeEach(function(){
+                mocks = getMocks();
+                mocks.GetAllMocksForProvider.and.returnValue({});
+                module('quickmock');
+                module(function($provide){
+                    angular.forEach(['global','GetAllMocksForProvider','SetupDirective','SetupInitializer','SanitizeProvider'], function(mock){
+                        $provide.value(mock, mocks[mock]);
+                    });
+                });
+                inject(function(MockOutProvider){
+                    mockOutProvider = MockOutProvider;
+                });
+            });
+
+            describe(', if provider has a known type,', function () {
+
+                it('should generate mocks for the given provider', function(){
+                    mockOutProvider();
+                    expect(mocks.GetAllMocksForProvider).toHaveBeenCalledWith('someProvider');
+                });
+
+                it('should set the global mocks value', function(){
+                    mockOutProvider();
+                    expect(mocks.global.mocks).toHaveBeenCalledWith({});
+                });
+
+            });
+
+        });
 
 	});
 

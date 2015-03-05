@@ -101,11 +101,11 @@
 			}
 		])
 
-		.service('MockOutProvider', ['global','GetAllMocksForProvider','SetupDirective','SetupInitializer','SanitizeProvider',
-			function(global, getAllMocksForProvider, setupDirective, setupInitializer, sanitizeProvider){
+		.service('MockOutProvider', ['global','GetAllMocksForProvider','SetupDirective','SetupInitializer','SanitizeProvider','ProviderType',
+			function(global, getAllMocksForProvider, setupDirective, setupInitializer, sanitizeProvider, ProviderType){
 				return function mockOutProvider(){
 					var provider = {};
-					if(global.providerType()){
+					if(global.providerType() !== ProviderType.unknown){
 						global.mocks(getAllMocksForProvider(global.options().providerName));
                         provider = setupInitializer();
 					}
