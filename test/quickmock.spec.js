@@ -141,6 +141,37 @@
 				expect(mocks.ThrowError).toHaveBeenCalledWith(mocks.errorMessage.noAngular);
 			});
 
+			it('should throw an exception when no providerName is given', function(){
+				mocks.options.providerName = undefined;
+				assertRequirdOptions(mocks.options);
+				expect(mocks.ThrowError).toHaveBeenCalledWith(mocks.errorMessage.noProviderName);
+			});
+
+			it('should not throw an exception when no providerName is given, as long as configBlocks is true', function(){
+				mocks.options.providerName = undefined;
+				mocks.options.configBlocks = true;
+				assertRequirdOptions(mocks.options);
+				expect(mocks.ThrowError).not.toHaveBeenCalled();
+			});
+
+			it('should not throw an exception when no providerName is given, as long as runBlocks is true', function(){
+				mocks.options.providerName = undefined;
+				mocks.options.runBlocks = true;
+				assertRequirdOptions(mocks.options);
+				expect(mocks.ThrowError).not.toHaveBeenCalled();
+			});
+
+			it('should throw an exception when no moduleName is given', function(){
+				mocks.options.moduleName = undefined;
+				assertRequirdOptions(mocks.options);
+				expect(mocks.ThrowError).toHaveBeenCalledWith(mocks.errorMessage.noModuleName);
+			});
+
+			it('should set mockModules to a default empty array', function(){
+				assertRequirdOptions(mocks.options);
+				expect(mocks.options.mockModules).toEqual([]);
+			});
+
 		});
 
         describe('MockOutProvider', function () {
