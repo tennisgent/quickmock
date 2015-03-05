@@ -4,19 +4,32 @@
 
     angular.module('quickmock.mockHelper', ['quickmock'])
 
-        .run(['decorateAngularModule',
-            function(decorateAngularModule){
-                origModuleFunc = angular.module;
+        .run(['decorateAngularModule', 'origModuleFunc',
+            function(decorateAngularModule, origModuleFunc){
+                origModuleFunc.set(angular.module);
                 angular.module = decorateAngularModule;
             }
         ])
 
-        //.factory('origModuleFunc', )
+        .factory('origModuleFunc', [
+            function(){
+                var origModuleFunc;
+                return {
+                    get: function(){
+                        return origModuleFunc;
+                    },
+                    set: function(){
+                        origModuleFunc = arguments[0];
+                    }
+                }
+            }
+        ])
 
-        .service('decorateAngularModule', ['getDecoratedMethods',
-            function(getDecoratedMethods){
+        .service('decorateAngularModule', ['getDecoratedMethods', 'origModuleFunc',
+            function(getDecoratedMethods, origModuleFunc){
                 return function decorateAngularModule(name, requires, configFn){
-                    var modObj = origModuleFunc(name, requires, configFn),
+                    var origFunc = origModuleFunc.get(),
+                        modObj = origFunc(name, requires, configFn),
                         methods = getDecoratedMethods(modObj);
                     angular.forEach(methods, function(method, methodName){
                         modObj[methodName] = method;
