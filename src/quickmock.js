@@ -82,31 +82,17 @@
             }
         ])
 
-        .service('ReplaceInInvokeQueue', ['global',
-            function(global){
-                return function getFromInvokeQueue(providerName, newProviderData){
-                    var invokeQueue = global.invokeQueue();
-                    for(var i=0; i<invokeQueue.length; i++){
-                        var providerData = invokeQueue[i];
-                        if (providerData[2][0] === providerName) {
-                            invokeQueue[i] = newProviderData;
-                        }
-                    }
-                };
-            }
-        ])
-
-		.service('AssertRequiredOptions', ['$window',
-			function($window){
+		.service('AssertRequiredOptions', ['$window','ErrorMessages','ThrowError',
+			function($window, ErrorMessages, throwError){
 				return function assertRequiredOptions(options){
 					if(!$window.angular){
-						throw new Error('quickmock: Cannot initialize because angular is not available. Please load angular before loading quickmock.js.');
+						throwError(ErrorMessages.noAngular);
 					}
 					if(!options.providerName && !options.configBlocks && !options.runBlocks){
-						throw new Error('quickmock: No providerName given. You must give the name of the provider/service you wish to test, or set the configBlocks or runBlocks flags.');
+						throwError(ErrorMessages.noProviderName);
 					}
 					if(!options.moduleName){
-						throw new Error('quickmock: No moduleName given. You must give the name of the module that contains the provider/service you wish to test.');
+						throwError(ErrorMessages.noModuleName);
 					}
 					options.mockModules = options.mockModules || [];
 					options.mocks = options.mocks || {};
@@ -180,8 +166,8 @@
 			}
 		])
 
-		.service('GetMockForDependency', ['global','GetProviderType','QuickmockLog','ProviderType','ReplaceInInvokeQueue',
-			function(global, getProviderType, quickmockLog, ProviderType, replaceInInvokeQueue){
+		.service('GetMockForDependency', ['global','GetProviderType','QuickmockLog','ProviderType',
+			function(global, getProviderType, quickmockLog, ProviderType){
 				return function getMockForDependency(depName, providerData, i){
 					var opts = global.options(),
 						injector = global.injector(),
@@ -409,7 +395,25 @@
 					});
 				};
 			}
-		]);
+		])
+
+		.value('ErrorMessages', {
+			noAngular: 'quickmock: Cannot initialize because angular is not available. Please load angular before loading quickmock.js.',
+			noProviderName: 'quickmock: No providerName given. You must give the name of the provider/service you wish to test, or set the configBlocks or runBlocks flags.',
+			noModuleName: 'quickmock: No moduleName given. You must give the name of the module that contains the provider/service you wish to test.'
+		})
+
+		.service('ThrowError', function(){
+			return function throwError(){
+				var msg = arguments[0];
+				if(arguments.length > 1){
+					for(var i=1; i<arguments.length; i++){
+						msg.replace('{'+i+'}', arguments[i]);
+					}
+				}
+				throw new Error(msg);
+			}
+		});
 
 	angular.bootstrap(angular.element('<div></div>'), ['quickmock']);
 
