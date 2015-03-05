@@ -11,7 +11,7 @@
             }
         ])
 
-        .factory('origModuleFunc', [
+        .service('origModuleFunc', [
             function(){
                 var origModuleFunc;
                 return {
@@ -39,11 +39,12 @@
             }
         ])
 
-        .service('getDecoratedMethods', ['global',
-            function(global){
+        .service('getDecoratedMethods', ['global', 'ProviderType',
+            function(global, providerTypes){
                 return function getDecoratedMethods(modObj){
+                    var decoratedMethods = {};
 
-                    function basicMock(providerName, initFunc, providerType){
+                    function genericMock(providerName, initFunc, providerType){
                         var newModObj = modObj[providerType](global.mockPrefix() + providerName, initFunc),
                             methods = getDecoratedMethods(newModObj);
                         angular.forEach(methods, function(method, methodName){
@@ -52,38 +53,16 @@
                         return newModObj;
                     }
 
-                    return {
-                        mockService: function mockService(providerName, initFunc){
-                            return basicMock(providerName, initFunc, 'service', modObj);
-                        },
-                        mockFactory: function mockFactory(providerName, initFunc){
-                            return basicMock(providerName, initFunc, 'factory', modObj);
-                        },
-
-                        mockFilter: function mockFilter(providerName, initFunc){
-                            return basicMock(providerName, initFunc, 'filter', modObj);
-                        },
-
-                        mockController: function mockController(providerName, initFunc){
-                            return basicMock(providerName, initFunc, 'controller', modObj);
-                        },
-
-                        mockProvider: function mockProvider(providerName, initFunc){
-                            return basicMock(providerName, initFunc, 'provider', modObj);
-                        },
-
-                        mockValue: function mockValue(providerName, initFunc){
-                            return basicMock(providerName, initFunc, 'value', modObj);
-                        },
-
-                        mockConstant: function mockConstant(providerName, initFunc){
-                            return basicMock(providerName, initFunc, 'constant', modObj);
-                        },
-
-                        mockAnimation: function mockAnimation(providerName, initFunc){
-                            return basicMock(providerName, initFunc, 'animation', modObj);
+                    angular.forEach(providerTypes, function(type){
+                        if(type !== providerTypes.unknown){
+                            var mockName = 'mock' + type.charAt(0).toUpperCase() + type.slice(1);
+                            decoratedMethods[mockName] = function mock(providerName, initFunc){
+                                return genericMock(providerName, initFunc, type);
+                            };
                         }
-                    };
+                    });
+
+                    return decoratedMethods;
                 };
             }
         ]);
