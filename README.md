@@ -1,4 +1,4 @@
-quickmock
+![quickmock](https://raw.githack.com/tennisgent/quickmock/master/quickmock_xsm.png) quickmock
 ======
 
 quickmock is a micro-library for initializing, mocking and auto-injecting provider dependencies for Jasmine/Mocha/Chai/Sinon unit tests in AngularJS. View an introduction video by [clicking here](https://www.youtube.com/watch?v=1U_eA7fHtBo).
