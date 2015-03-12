@@ -101,8 +101,8 @@
 			}
 		])
 
-		.service('MockOutProvider', ['global','GetAllMocksForProvider','SetupDirective','SetupInitializer','SanitizeProvider','ProviderType',
-			function(global, getAllMocksForProvider, setupDirective, setupInitializer, sanitizeProvider, ProviderType){
+		.service('MockOutProvider', ['global','GetAllMocksForProvider','SetupInitializer','SanitizeProvider','ProviderType',
+			function(global, getAllMocksForProvider, setupInitializer, sanitizeProvider, ProviderType){
 				return function mockOutProvider(){
 					var provider = {};
 					if(global.providerType() !== ProviderType.unknown){
@@ -131,8 +131,8 @@
 			}
 		])
 
-		.service('InitializeProvider', ['global','ProviderType','SetupDirective',
-			function(global, ProviderType, setupDirective){
+		.service('InitializeProvider', ['global','ProviderType','QuickmockCompile',
+			function(global, ProviderType, quickmockCompile){
 				return function initializeProvider(){
 					var providerName = global.options().providerName;
 					switch(global.providerType()){
@@ -143,7 +143,10 @@
                             var $filter = global.injector().get('$filter');
 							return $filter(providerName);
                         case ProviderType.directive:
-                            return setupDirective();
+							var provider = {};
+							provider.$mocks = global.mocks();
+							provider.$compile = quickmockCompile(provider);
+							return provider;
 						default:
 							return global.injector().get(providerName);
 					}
@@ -201,21 +204,9 @@
 			}
 		])
 
-		.service('SetupDirective', ['global','QuickmockCompile','$rootScope',
-			function(global, quickmockCompile, $rootScope){
-				return function setupDirective(){
-					var provider = {};
-					provider.$scope = $rootScope.$new();
-					provider.$mocks = global.mocks();
-					provider.$compile = quickmockCompile(provider);
-					return provider;
-				};
-			}
-		])
-
-		.service('QuickmockCompile', ['global', 'GenerateHtmlStringFromObject','PrefixProviderDependencies','UnprefixProviderDependencies',
-			function(global, generateHtmlStringFromObject, prefixProviderDependencies, unprefixProviderDependencies){
-				return function(provider){
+		.service('QuickmockCompile', ['global', 'GenerateHtmlStringFromObject','PrefixProviderDependencies','UnprefixProviderDependencies','$rootScope',
+			function(global, generateHtmlStringFromObject, prefixProviderDependencies, unprefixProviderDependencies, $rootScope){
+				return function(directive){
 					return function quickmockCompile(html){
 						var opts = global.options(),
                             $compile = global.injector().get('$compile');
@@ -226,12 +217,14 @@
 						if(angular.isObject(html)){
 							html = generateHtmlStringFromObject(html);
 						}
-						provider.$element = angular.element(html);
+						directive.$element = angular.element(html);
+						directive.$scope = $rootScope.$new();
 						prefixProviderDependencies(opts.providerName);
-						$compile(provider.$element)(provider.$scope);
+						$compile(directive.$element)(directive.$scope);
 						unprefixProviderDependencies(opts.providerName);
-						provider.$isoScope = provider.$element.isolateScope();
-						provider.$scope.$digest();
+						directive.$isoScope = directive.$element.isolateScope() || undefined;
+						directive.$localScope = (directive.$scope === directive.$element.scope()) ? undefined : directive.$element.scope();
+						directive.$scope.$digest();
 					};
 				};
 			}

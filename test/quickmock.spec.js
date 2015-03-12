@@ -23,7 +23,9 @@
                 GetAllMocksForProvider: jasmine.createSpy('GetAllMocksForProvider'),
                 SetupDirective: jasmine.createSpy('SetupDirective'),
                 SetupInitializer: jasmine.createSpy('SetupInitializer'),
-                SanitizeProvider: jasmine.createSpy('SanitizeProvider')
+                SanitizeProvider: jasmine.createSpy('SanitizeProvider'),
+				InitializeProvider: jasmine.createSpy('InitializeProvider'),
+				SpyOnProviderMethods: jasmine.createSpy('SpyOnProviderMethods')
 			};
 			mocks.GetProviderType.and.returnValue('someType');
 			mocks.AssertRequiredOptions.and.returnValue(mocks.options);
@@ -119,56 +121,59 @@
 		});
 
 		describe('AssertRequiredOptions', function () {
-			var assertRequirdOptions, mocks;
+			var assertRequiredOptions, mocks;
 
 			beforeEach(function(){
 				mocks = getMocks();
-                mocks.$window = {};
+                mocks.$window = {
+					angular: angular
+				};
 				module('quickmock');
 				module(function($provide){
 					$provide.value('ThrowError', mocks.ThrowError);
                     $provide.value('$window', mocks.$window);
 				});
 			    inject(function(AssertRequiredOptions, ErrorMessages){
-					assertRequirdOptions = AssertRequiredOptions;
+					assertRequiredOptions = AssertRequiredOptions;
 					mocks.errorMessage = ErrorMessages;
 				});
 			});
 
 			it('should throw an exception when angular is not available', function(){
 				mocks.$window.angular = undefined;
-				assertRequirdOptions(mocks.options);
+				assertRequiredOptions(mocks.options);
 				expect(mocks.ThrowError).toHaveBeenCalledWith(mocks.errorMessage.noAngular);
 			});
 
 			it('should throw an exception when no providerName is given', function(){
 				mocks.options.providerName = undefined;
-				assertRequirdOptions(mocks.options);
+				assertRequiredOptions(mocks.options);
 				expect(mocks.ThrowError).toHaveBeenCalledWith(mocks.errorMessage.noProviderName);
 			});
 
 			it('should not throw an exception when no providerName is given, as long as configBlocks is true', function(){
 				mocks.options.providerName = undefined;
 				mocks.options.configBlocks = true;
-				assertRequirdOptions(mocks.options);
+				assertRequiredOptions(mocks.options);
 				expect(mocks.ThrowError).not.toHaveBeenCalled();
 			});
 
 			it('should not throw an exception when no providerName is given, as long as runBlocks is true', function(){
 				mocks.options.providerName = undefined;
 				mocks.options.runBlocks = true;
-				assertRequirdOptions(mocks.options);
+				assertRequiredOptions(mocks.options);
 				expect(mocks.ThrowError).not.toHaveBeenCalled();
 			});
 
 			it('should throw an exception when no moduleName is given', function(){
 				mocks.options.moduleName = undefined;
-				assertRequirdOptions(mocks.options);
+				assertRequiredOptions(mocks.options);
 				expect(mocks.ThrowError).toHaveBeenCalledWith(mocks.errorMessage.noModuleName);
 			});
 
 			it('should set mockModules to a default empty array', function(){
-				assertRequirdOptions(mocks.options);
+				mocks.options.mockModules = undefined;
+				assertRequiredOptions(mocks.options);
 				expect(mocks.options.mockModules).toEqual([]);
 			});
 
@@ -182,7 +187,7 @@
                 mocks.GetAllMocksForProvider.and.returnValue({});
                 module('quickmock');
                 module(function($provide){
-                    angular.forEach(['global','GetAllMocksForProvider','SetupDirective','SetupInitializer','SanitizeProvider'], function(mock){
+                    angular.forEach(['global','GetAllMocksForProvider','SetupInitializer','SanitizeProvider'], function(mock){
                         $provide.value(mock, mocks[mock]);
                     });
                 });
@@ -195,7 +200,7 @@
 
                 it('should generate mocks for the given provider', function(){
                     mockOutProvider();
-                    expect(mocks.GetAllMocksForProvider).toHaveBeenCalledWith('someProvider');
+                    expect(mocks.GetAllMocksForProvider).toHaveBeenCalledWith(mocks.options.providerName);
                 });
 
                 it('should set the global mocks value', function(){
@@ -203,9 +208,118 @@
                     expect(mocks.global.mocks).toHaveBeenCalledWith({});
                 });
 
+				it('should setup the initializer', function(){
+					mockOutProvider();
+					expect(mocks.SetupInitializer).toHaveBeenCalled();
+				});
+
+				it('should sanitize each item in the invoke queue', function(){
+					mockOutProvider();
+					angular.forEach(mocks.invokeQueue, function(providerData){
+						expect(mocks.SanitizeProvider).toHaveBeenCalledWith(providerData);
+					});
+				});
+
+				it('should return the intialized provider', function(){
+					mocks.SetupInitializer.and.returnValue({key: 'value'});
+					expect(mockOutProvider()).toEqual({key: 'value'})
+				});
+
             });
 
+			describe(', if provider has an unknown type', function () {
+
+				beforeEach(function(){
+				    mocks.global.providerType.and.returnValue('unknown');
+				});
+
+				it('should not setup the initializer', function(){
+					mockOutProvider();
+					expect(mocks.SetupInitializer).not.toHaveBeenCalled();
+				});
+
+				it('should sanitize each item in the invoke queue', function(){
+					mockOutProvider();
+					angular.forEach(mocks.invokeQueue, function(providerData){
+						expect(mocks.SanitizeProvider).toHaveBeenCalledWith(providerData);
+					});
+				});
+
+				it('should return a default empty object', function(){
+					expect(mockOutProvider()).toEqual({})
+				});
+
+			});
+
         });
+
+		describe('SetupInitializer', function () {
+			var setupInitializer, mocks, provider;
+
+			beforeEach(function(){
+				mocks = getMocks();
+				module('quickmock');
+				module(function($provide){
+					angular.forEach(['global','InitializeProvider','SpyOnProviderMethods'], function(mock){
+						$provide.value(mock, mocks[mock]);
+					});
+				});
+				inject(function(SetupInitializer){
+					setupInitializer = SetupInitializer;
+				});
+				provider = {};
+				mocks.InitializeProvider.and.returnValue(provider);
+			});
+			
+			it('should intialize provider', function(){
+				setupInitializer();
+				expect(mocks.InitializeProvider).toHaveBeenCalled();
+			});
+			
+			it('should spy on provider\'s methods if flag is set', function(){
+				mocks.global.options.and.returnValue({spyOnProviderMethods: true});
+				setupInitializer();
+				expect(mocks.SpyOnProviderMethods).toHaveBeenCalledWith(provider);
+			});
+
+			it('should not spy on provider\'s methods if flag is not set', function(){
+				setupInitializer();
+				expect(mocks.SpyOnProviderMethods).not.toHaveBeenCalled();
+			});
+
+			it('should expose the mocks as $mocks', function(){
+				var fakeMocks = {mock1: {}, mock2: {}};
+				mocks.global.mocks.and.returnValue(fakeMocks);
+				var result = setupInitializer();
+				expect(result.$mocks).toBe(fakeMocks);
+			});
+
+			it('should expose the initializer method as $initialize', function(){
+				var result = setupInitializer();
+				expect(result.$initialize).toBe(setupInitializer);
+			});
+
+		});
+
+		describe('InitializeProvider', function () {
+			var setupInitializer, mocks, provider;
+
+			beforeEach(function(){
+				mocks = getMocks();
+				module('quickmock');
+				module(function($provide){
+					angular.forEach(['global','QuickmockCompile'], function(mock){
+						$provide.value(mock, mocks[mock]);
+					});
+				});
+				inject(function(SetupInitializer){
+					setupInitializer = SetupInitializer;
+				});
+				provider = {};
+				mocks.InitializeProvider.and.returnValue(provider);
+			});
+
+		});
 
 	});
 

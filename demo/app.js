@@ -159,6 +159,18 @@
 			};
 		}])
 
+		.directive('redBlueBox', [function(){
+			return {
+				restrict: 'AE',
+				replace: true,
+				template: '<div class="color-box {{isRed ? \'red\' : \'blue\'}}" ng-click="isRed = !isRed"></div>',
+				scope: true,
+				link: function(scope){
+					scope.isRed = true;
+				}
+			};
+		}])
+
 		.filter('firstInitialLastName', function(){
 			// returns first initial and last name
 			// ex: 'M. Jackson' for {firstName: 'Michael', lastName: 'Jackson'}
