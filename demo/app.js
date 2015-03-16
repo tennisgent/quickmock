@@ -163,11 +163,13 @@
 			return {
 				restrict: 'AE',
 				replace: true,
-				template: '<div class="color-box {{isRed ? \'red\' : \'blue\'}}" ng-click="isRed = !isRed"></div>',
+				template: '<div class="color-box" ng-click="vm.isRed = !vm.isRed" ng-class="{red: vm.isRed, blue: !vm.isRed}"></div>',
 				scope: true,
-				link: function(scope){
-					scope.isRed = true;
-				}
+				controller: function(){
+					var vm = this;
+					vm.isRed = true;
+				},
+				controllerAs: 'vm'
 			};
 		}])
 

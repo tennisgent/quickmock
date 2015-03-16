@@ -131,8 +131,8 @@
 			}
 		])
 
-		.service('InitializeProvider', ['global','ProviderType','QuickmockCompile',
-			function(global, ProviderType, quickmockCompile){
+		.service('InitializeProvider', ['global','ProviderType','QuickmockCompile','$rootScope',
+			function(global, ProviderType, quickmockCompile, $rootScope){
 				return function initializeProvider(){
 					var providerName = global.options().providerName;
 					switch(global.providerType()){
@@ -144,6 +144,7 @@
 							return $filter(providerName);
                         case ProviderType.directive:
 							var provider = {};
+							provider.$scope = $rootScope.$new();
 							provider.$mocks = global.mocks();
 							provider.$compile = quickmockCompile(provider);
 							return provider;
@@ -204,8 +205,8 @@
 			}
 		])
 
-		.service('QuickmockCompile', ['global', 'GenerateHtmlStringFromObject','PrefixProviderDependencies','UnprefixProviderDependencies','$rootScope',
-			function(global, generateHtmlStringFromObject, prefixProviderDependencies, unprefixProviderDependencies, $rootScope){
+		.service('QuickmockCompile', ['global', 'GenerateHtmlStringFromObject','PrefixProviderDependencies','UnprefixProviderDependencies',
+			function(global, generateHtmlStringFromObject, prefixProviderDependencies, unprefixProviderDependencies){
 				return function(directive){
 					return function quickmockCompile(html){
 						var opts = global.options(),
@@ -218,13 +219,18 @@
 							html = generateHtmlStringFromObject(html);
 						}
 						directive.$element = angular.element(html);
-						directive.$scope = $rootScope.$new();
 						prefixProviderDependencies(opts.providerName);
 						$compile(directive.$element)(directive.$scope);
 						unprefixProviderDependencies(opts.providerName);
-						directive.$isoScope = directive.$element.isolateScope() || undefined;
-						directive.$localScope = (directive.$scope === directive.$element.scope()) ? undefined : directive.$element.scope();
+						directive.$isoScope = directive.$element.isolateScope();
+						directive.$localScope = directive.$element.scope();
 						directive.$scope.$digest();
+						if(directive.$isoScope){
+							directive.$isoScope.$digest();
+						}
+						if(directive.$localScope){
+							directive.$localScope.$digest();
+						}
 					};
 				};
 			}
