@@ -159,19 +159,18 @@
 			};
 		}])
 
-		.directive('redBlueBox', [function(){
+		.directive('redBlueBox', function(){
 			return {
 				restrict: 'AE',
 				replace: true,
 				template: '<div class="color-box" ng-click="vm.isRed = !vm.isRed" ng-class="{red: vm.isRed, blue: !vm.isRed}"></div>',
 				scope: true,
 				controller: function(){
-					var vm = this;
-					vm.isRed = true;
+					this.isRed = true;
 				},
 				controllerAs: 'vm'
 			};
-		}])
+		})
 
 		.filter('firstInitialLastName', function(){
 			// returns first initial and last name

@@ -1,15 +1,15 @@
 (function(){
 
-	describe('zb-toggle Directive', function () {
+	describe('red-blue-box Directive', function () {
 		var redBlueBox;
 
 		beforeEach(function(){
 			redBlueBox = quickmock({
 				providerName: 'redBlueBox',
 				moduleName: 'QuickMockDemo',
-				html: '<div red-blue-box></div>'    		// default html to be compiled when .$compile() is called
+				html: '<div red-blue-box></div>'
 			});
-			redBlueBox.$compile();  // .$compile() compiles the html string and then calls scope.$digest()
+			redBlueBox.$compile();
 		});
 
 		it('should have the color-box class', function(){

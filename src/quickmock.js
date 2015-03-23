@@ -131,8 +131,8 @@
 			}
 		])
 
-		.service('InitializeProvider', ['global','ProviderType','QuickmockCompile','$rootScope',
-			function(global, ProviderType, quickmockCompile, $rootScope){
+		.service('InitializeProvider', ['global','ProviderType','QuickmockCompile',
+			function(global, ProviderType, quickmockCompile){
 				return function initializeProvider(){
 					var providerName = global.options().providerName;
 					switch(global.providerType()){
@@ -143,7 +143,8 @@
                             var $filter = global.injector().get('$filter');
 							return $filter(providerName);
                         case ProviderType.directive:
-							var provider = {};
+							var provider = {},
+								$rootScope = global.injector().get('$rootScope');
 							provider.$scope = $rootScope.$new();
 							provider.$mocks = global.mocks();
 							provider.$compile = quickmockCompile(provider);
@@ -211,8 +212,7 @@
 					return function quickmockCompile(html){
 						var opts = global.options(),
                             $compile = global.injector().get('$compile');
-						html = html || opts.html;
-						if(!html){
+						if(!(html = html || opts.html)){
 							throw new Error('quickmock: Cannot compile "' + opts.providerName + '" directive. No html string/object provided.');
 						}
 						if(angular.isObject(html)){
@@ -225,12 +225,6 @@
 						directive.$isoScope = directive.$element.isolateScope();
 						directive.$localScope = directive.$element.scope();
 						directive.$scope.$digest();
-						if(directive.$isoScope){
-							directive.$isoScope.$digest();
-						}
-						if(directive.$localScope){
-							directive.$localScope.$digest();
-						}
 					};
 				};
 			}
