@@ -288,7 +288,7 @@ it('should have an isolateScope', function(){
 More In-depth Examples
 ----------------------
 
-The examples above are very simple. You will find more in-depth examples for each of the various provider types in the [`demo/app.js`](https://github.com/tennisgent/quickmock/blob/master/demo/app.js) file. Each of the providers in that file have their own quickmock test files that give more details on how to test them using quickmock. Each of these specs files are found in the [`specsUsingQuickMock`](https://github.com/tennisgent/quickmock/tree/master/demo/specsUsingQuickMock) folder.
+The examples above are very simple. You will find more in-depth examples for each of the various provider types in the [`demo/demo.js`](https://github.com/tennisgent/quickmock/blob/master/demo/demo.js) file. Each of the providers in that file have their own quickmock test files that give more details on how to test them using quickmock. Each of these specs files are found in the [`specsUsingQuickMock`](https://github.com/tennisgent/quickmock/tree/master/demo/specsUsingQuickMock) folder.
 
 | Type  | Name | Spec File |
 | ------------- | ------------- | ------------- |

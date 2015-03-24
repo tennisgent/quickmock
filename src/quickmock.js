@@ -179,7 +179,7 @@
 						mockPrefix = global.mockPrefix(),
 						depType = getProviderType(depName),
 						mockServiceName = depName;
-					if(opts.mocks[mockServiceName] && opts.mocks[mockServiceName] === global.useActual()){
+					if(opts.useActualDependencies === true || opts.mocks[mockServiceName] === global.useActual()){
 						quickmockLog('quickmock: Using actual implementation of "' + depName + '" ' + depType + ' instead of mock');
 					}else if(depType === ProviderType.value || depType === ProviderType.constant){
 						if(injector.has(mockPrefix + depName)){

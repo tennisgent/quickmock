@@ -3,33 +3,27 @@
 	describe('quickmock', function () {
 
 		function getMocks(mockName){
-			var mocks = {
-				global: jasmine.createSpyObj('global', ['options','mockPrefix','allModules','injector','modObj','providerType','mocks','provider','useActual','muteLogs','invokeQueue']),
-				AssertRequiredOptions: jasmine.createSpy('AssertRequiredOptions'),
-				MockOutProvider: jasmine.createSpy('MockOutProvider'),
-				GetProviderType: jasmine.createSpy('GetProviderType'),
-				invokeQueue: [
-					['$provide','factory',['FakeFactory',['Dep1','Dep2',function(dep1,dep2){}]]],
-					['$provide','service',['FakeService',['Dep1','Dep2',function(dep1,dep2){}]]],
-					['$provide','directive',['FakeDirective',['Dep1','Dep2',function(dep1,dep2){}]]],
-					['$provide','value',['FakeValue',['Dep1','Dep2',function(dep1,dep2){}]]]
-				],
-				options: {
-					providerName: 'someProvider',
-					moduleName: 'someModule',
-					mockModules: ['someModules']
-				},
-				ThrowError: jasmine.createSpy('ThrowError'),
-                GetAllMocksForProvider: jasmine.createSpy('GetAllMocksForProvider'),
-                SetupDirective: jasmine.createSpy('SetupDirective'),
-                SetupInitializer: jasmine.createSpy('SetupInitializer'),
-                SanitizeProvider: jasmine.createSpy('SanitizeProvider'),
-				InitializeProvider: jasmine.createSpy('InitializeProvider'),
-				SpyOnProviderMethods: jasmine.createSpy('SpyOnProviderMethods')
+			var mocks = jasmine.createSpyObj('qmMocks', ['AssertRequiredOptions','MockOutProvider','GetProviderType','ThrowError',
+				'GetAllMocksForProvider','SetupDirective','SetupInitializer','SanitizeProvider','InitializeProvider',
+				'SpyOnProviderMethods','QuickmockCompile','QuickmockLog']);
+			mocks.invokeQueue = [
+				['$provide','factory',['FakeFactory',['Dep1','Dep2',function(dep1,dep2){}]]],
+				['$provide','service',['FakeService',['Dep1','Dep2',function(dep1,dep2){}]]],
+				['$provide','directive',['FakeDirective',['Dep1','Dep2',function(dep1,dep2){}]]],
+				['$provide','value',['FakeValue',['Dep1','Dep2',function(dep1,dep2){}]]]
+			];
+			mocks.options = {
+				providerName: 'someProvider',
+				moduleName: 'someModule',
+				mockModules: ['someModules'],
+				mocks: {}
 			};
+			mocks.global = jasmine.createSpyObj('global', ['options','mockPrefix','allModules','injector','modObj','providerType',
+				'mocks','provider','useActual','muteLogs','invokeQueue']);
 			mocks.GetProviderType.and.returnValue('someType');
 			mocks.AssertRequiredOptions.and.returnValue(mocks.options);
 			mocks.global.invokeQueue.and.returnValue(mocks.invokeQueue);
+			mocks.global.useActual.and.returnValue('USE_ACTUAL');
             mocks.global.options.and.returnValue(mocks.options);
 			return mockName ? mocks[mockName] : mocks;
 		}
@@ -302,7 +296,7 @@
 		});
 
 		describe('InitializeProvider', function () {
-			var setupInitializer, mocks, provider;
+			var initProvider, mocks, injector, fakeMocks;
 
 			beforeEach(function(){
 				mocks = getMocks();
@@ -312,11 +306,181 @@
 						$provide.value(mock, mocks[mock]);
 					});
 				});
-				inject(function(SetupInitializer){
-					setupInitializer = SetupInitializer;
+				inject(function(InitializeProvider, ProviderType){
+					initProvider = InitializeProvider;
+					mocks.ProviderType = ProviderType;
 				});
-				provider = {};
-				mocks.InitializeProvider.and.returnValue(provider);
+				injector = jasmine.createSpyObj('$injector', ['get']);
+				mocks.global.injector.and.returnValue(injector);
+				fakeMocks = {mock1: 'someMock', mock2: 'someOtherMock'};
+				mocks.global.mocks.and.returnValue(fakeMocks);
+			});
+
+			describe('for controllers', function () {
+				var $controller;
+
+				beforeEach(function(){
+					$controller = jasmine.createSpy('$controller').and.returnValue('$controller');
+					injector.get.and.returnValue($controller);
+					mocks.global.providerType.and.returnValue(mocks.ProviderType.controller);
+					mocks.global.options.and.returnValue({providerName: 'myController'});
+				});
+
+				it('should pull in the $controller service', function(){
+				    initProvider();
+					expect(mocks.global.injector).toHaveBeenCalled();
+					expect(injector.get).toHaveBeenCalledWith('$controller');
+				});
+
+				it('should initialize the controller using $controller with the proper mocks', function(){
+					initProvider();
+					expect($controller).toHaveBeenCalledWith('myController', fakeMocks);
+				});
+
+				it('should return the initialized controller object', function(){
+				    var result = initProvider();
+					expect(result).toEqual('$controller');
+				});
+
+			});
+
+			describe('for filters', function () {
+				var $filter;
+
+				beforeEach(function(){
+					$filter = jasmine.createSpy('$filter').and.returnValue('$filter');
+					injector.get.and.returnValue($filter);
+					mocks.global.providerType.and.returnValue(mocks.ProviderType.filter);
+					mocks.global.options.and.returnValue({providerName: 'myFilter'});
+				});
+
+				it('should pull in the $filter service', function(){
+					initProvider();
+					expect(mocks.global.injector).toHaveBeenCalled();
+					expect(injector.get).toHaveBeenCalledWith('$filter');
+				});
+
+				it('should initialize the filter using $filter', function(){
+					initProvider();
+					expect($filter).toHaveBeenCalledWith('myFilter');
+				});
+
+				it('should return the initialized controller object', function(){
+					var result = initProvider();
+					expect(result).toEqual('$filter');
+				});
+
+			});
+
+			describe('for directives', function () {
+				var $rootScope;
+
+				beforeEach(function(){
+					$rootScope = jasmine.createSpyObj('$filter', ['$new']);
+					injector.get.and.returnValue($rootScope);
+					mocks.global.providerType.and.returnValue(mocks.ProviderType.directive);
+				});
+
+				it('should pull in the $rootScope service', function(){
+					initProvider();
+					expect(mocks.global.injector).toHaveBeenCalled();
+					expect(injector.get).toHaveBeenCalledWith('$rootScope');
+				});
+
+				it('should compile the controller using quickmockCompile', function(){
+					initProvider();
+					expect(mocks.QuickmockCompile).toHaveBeenCalled();
+				});
+
+				it('should expose the directive\'s mocks', function(){
+					var result = initProvider();
+					expect(result.$mocks).toBe(fakeMocks);
+				});
+
+				it('should expose the directive\'s $scope', function(){
+					$rootScope.$new.and.returnValue('$scope');
+					var result = initProvider();
+					expect(result.$scope).toBe('$scope');
+				});
+
+				it('should expose the directive\'s $compile function', function(){
+					mocks.QuickmockCompile.and.returnValue('$compile');
+					var result = initProvider();
+					expect(mocks.QuickmockCompile).toHaveBeenCalled();
+					expect(result.$compile).toBe('$compile');
+				});
+
+			});
+
+			describe('for other providers', function () {
+
+				angular.forEach(['factory','service','value','constant','provider'], function(type){
+
+					it('should return the injected ' + type + 'provider', function(){
+						var providerName = 'qm_' + type;
+						mocks.global.options.and.returnValue({providerName: providerName});
+						mocks.global.providerType.and.returnValue(mocks.ProviderType[type]);
+						injector.get.and.returnValue(providerName);
+						var result = initProvider();
+						expect(injector.get).toHaveBeenCalledWith(providerName);
+						expect(result).toEqual(providerName);
+					});
+
+				})
+
+			});
+
+		});
+
+		describe('GetMockForDependency', function () {
+			var getMockForDep, mocks, injector, opts, dep, providerData;
+
+			beforeEach(function(){
+				mocks = getMocks();
+				module('quickmock');
+				module(function($provide){
+					angular.forEach(['global','GetProviderType','QuickmockLog'], function(mock){
+						$provide.value(mock, mocks[mock]);
+					});
+				});
+				inject(function(GetMockForDependency, ProviderType){
+					getMockForDep = GetMockForDependency;
+					mocks.ProviderType = ProviderType;
+				});
+				providerData = mocks.invokeQueue[0];
+				dep = providerData[2][1][0];
+				injector = jasmine.createSpyObj('$injector', ['get','has']);
+				injector.has.and.returnValue(true);
+				mocks.global.injector.and.returnValue(injector);
+				mocks.global.mockPrefix.and.returnValue('___');
+			});
+
+			it('should attempt to use actual implementation if useActualDependencies flag is set', function(){
+				mocks.options.useActualDependencies = true;
+				getMockForDep(dep, [], 0);
+				expect(injector.get).toHaveBeenCalledWith(dep);
+			});
+
+			it('should attempt to use actual implementation if the mock\'s flag is set', function(){
+				mocks.options.mocks = {depName: mocks.global.useActual()};
+				getMockForDep(dep, [], 0);
+				expect(injector.get).toHaveBeenCalledWith(dep);
+			});
+
+			it('should attempt to use actual implementation if the provider is a value type and a mock does not exist', function(){
+				mocks.GetProviderType.and.returnValue(mocks.ProviderType.value);
+				injector.has.and.returnValue(false);
+				getMockForDep(dep, providerData, 0);
+				expect(providerData[2][1][0]).toEqual(depName);
+				expect(mocks.QuickmockLog).toHaveBeenCalled();
+				expect(injector.get).toHaveBeenCalledWith('___' + dep);
+			});
+
+			it('should attempt to use actual implementation if the provider is a value type', function(){
+				mocks.GetProviderType.and.returnValue(mocks.ProviderType.value);
+				getMockForDep(dep, providerData, 0);
+				expect(providerData[2][1][0]).toEqual(depName);
+				expect(injector.get).toHaveBeenCalledWith('___' + dep);
 			});
 
 		});
