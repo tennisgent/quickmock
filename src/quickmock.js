@@ -23,9 +23,9 @@
             }
         ])
 
-        .service('AnnotateFunction', ['$injector','global',
-            function($injector, global){
-                return function annotateFunction(initFunc){
+        .service('AnnotateFunction', ['$injector','global','Metadata','ProviderType',
+            function($injector, global, metadata, ProviderType){
+                return function annotateFunction(initFunc, prefixDeps){
                     var annotatedDependencies;
                     if(angular.isFunction(initFunc)){
                         annotatedDependencies = $injector.annotate(initFunc);
@@ -36,49 +36,70 @@
                     }else{
                         return initFunc;
                     }
-                    for(var i=0; i<annotatedDependencies.length-1; i++){
-                        annotatedDependencies[i] = global.mockPrefix() + annotatedDependencies[i];
-                    }
+					if(prefixDeps){
+						for(var i=0; i<annotatedDependencies.length-1; i++){
+							var depName = annotatedDependencies[i],
+								depType = metadata.get(depName, 'type');
+							if(depType !== ProviderType.value && depType !== ProviderType.constant){
+								annotatedDependencies[i] = global.mockPrefix() + depName;
+							}
+						}
+					}
                     return annotatedDependencies;
                 };
             }
         ])
 
-        .service('decorateDirective', ['AnnotateFunction',
-            function(annotateFunction){
+        .service('decorateDirective', ['AnnotateFunction','Metadata','ProviderType','global',
+            function(annotateFunction, metadata, ProviderType, global){
                 return function decorateDirective(modObj){
                     var directiveFunc = modObj.directive;
                     modObj.directive = function(providerName, initFunc){
-                        var annotatedDependencies = annotateFunction(initFunc),
+                        var annotatedDependencies = annotateFunction(initFunc, true),
                             origFunc = annotatedDependencies.pop();
+						metadata.set(providerName, 'type', ProviderType.directive);
                         annotatedDependencies.push(function directiveWrapper(){
                             var defObj = origFunc.apply(origFunc, arguments);
-                            if(angular.isFunction(defObj.controller)){
-                                defObj.controller = annotateFunction(defObj.controller);
-                            }
+							if(defObj.controller){
+								if(angular.isFunction(defObj.controller) || angular.isArray(defObj.controller)){
+									defObj.controller = annotateFunction(defObj.controller, true);
+								}else if(angular.isString(defObj.controller)){
+									var ctrlName = defObj.controller;
+									if(ctrlName.indexOf(' as ') !== -1){
+										ctrlName = ctrlName.split(' as ')[0].trim();
+									}
+									var ctrlDeps = metadata.get(ctrlName, 'dependencies');
+									angular.forEach(ctrlDeps, function(dep, i){
+										if(angular.isString(dep)){
+											ctrlDeps[i] = global.modPrefix() + dep;
+										}
+									});
+								}
+								metadata.set(providerName, 'controller', defObj.controller);
+							}
+
                             return defObj;
                         });
+						metadata.set(providerName, 'dependencies', annotatedDependencies);
                         return directiveFunc(providerName, annotatedDependencies);
                     };
                 }
             }
         ])
 
-        /*
-        Save origMethods and add annotated ones
-        Don't annotate mock* methods
-         */
-
-        .service('decorateAllMethods', ['decorateDirective','AnnotateFunction','ProviderType',
-            function(decorateDirective, annotateFunction, types){
+        .service('decorateAllMethods', ['decorateDirective','AnnotateFunction','ProviderType','Metadata',
+            function(decorateDirective, annotateFunction, types, metadata){
                 return function decorateStandardMethod(modObj){
-                    var methods = [types.service, types.factory, types.controller, types.directive,
+                    var methods = [types.service, types.factory, types.controller,
                         types.filter, types.provider, types.animation];
                     angular.forEach(methods, function(method){
-                        var origMethod = modObj[method];
-                        if(origMethod.name !== 'quickmockWrapper'){
+                        if(modObj[method].name !== 'quickmockWrapper'){
+							var origMethod = modObj[method];
                             modObj[method] = function quickmockWrapper(providerName, initFunc){
-                                return origMethod(providerName, annotateFunction(initFunc));
+								var annotatedDependencies = annotateFunction(initFunc);
+								metadata.set(providerName, 'type', types[method]);
+								metadata.set(providerName, 'dependencies', annotatedDependencies);
+                                return origMethod(providerName, annotatedDependencies);
                             };
                         }
                     });
@@ -102,8 +123,8 @@
             }
         ])
 
-        .service('getDecoratedMethods', ['global', 'ProviderType', 'decorateAllMethods',
-            function(global, providerTypes, decorateAllMethods){
+        .service('getDecoratedMethods', ['global', 'ProviderType', 'decorateAllMethods','Metadata',
+            function(global, providerTypes, decorateAllMethods, metadata){
                 return function getDecoratedMethods(modObj){
                     var decoratedMethods = {};
 
@@ -121,6 +142,7 @@
                         if(type !== providerTypes.unknown){
                             var mockName = 'mock' + type.charAt(0).toUpperCase() + type.slice(1);
                             decoratedMethods[mockName] = function mock(providerName, initFunc){
+								metadata.set(providerName, 'mock', initFunc);
                                 return genericMock(providerName, initFunc, type);
                             };
                         }
@@ -170,6 +192,30 @@
 					return arguments.length ? (globalVars.modObj._invokeQueue = arguments[0]) : globalVars.modObj._invokeQueue;
 				};
 				return methods;
+			}
+		])
+
+		.factory('Metadata', ['global',
+			function Metadata(global){
+				var metadata = {};
+				return {
+					metadata: metadata,
+					get: function get(providerName, property){
+						providerName = providerName.replace(global.mockPrefix(),'');
+						return metadata[providerName] && property
+							? metadata[providerName][property]
+							: (metadata[providerName] || {});
+					},
+					set: function set(providerName, property, value){
+						providerName = providerName.replace(global.mockPrefix(),'');
+						metadata[providerName] = metadata[providerName] || {};
+						if(property && value){
+							return metadata[providerName][property] = value;
+						}else if(property){
+							return metadata[providerName] = property;
+						}
+					}
+				};
 			}
 		])
 
@@ -306,6 +352,11 @@
 			}
 		])
 
+	/**
+	 * Propogate dependencies in the directive's controller up to the directive
+	 * So the $mocks object contains refs to the controller's deps
+	 */
+
 		.service('GetMockForDependency', ['global','GetProviderType','QuickmockLog','ProviderType',
 			function(global, getProviderType, quickmockLog, ProviderType){
 				return function getMockForDependency(depName, providerData, i){
@@ -341,8 +392,8 @@
 			}
 		])
 
-		.service('QuickmockCompile', ['global', 'GenerateHtmlStringFromObject','PrefixProviderDependencies','UnprefixProviderDependencies','GetFromInvokeQueue',
-			function(global, generateHtmlStringFromObject, prefixProviderDependencies, unprefixProviderDependencies, getFromInvokeQueue){
+		.service('QuickmockCompile', ['global', 'GenerateHtmlStringFromObject','PrefixProviderDependencies','UnprefixProviderDependencies','Metadata',
+			function(global, generateHtmlStringFromObject, prefixProviderDependencies, unprefixProviderDependencies, metadata){
 				return function(directive){
 					return function quickmockCompile(html){
 						var opts = global.options(),
@@ -355,6 +406,8 @@
 						}
 						directive.$element = angular.element(html);
 						prefixProviderDependencies(opts.providerName);
+
+						console.log(metadata);
 
 						$compile(directive.$element)(directive.$scope);
 
