@@ -46,7 +46,7 @@
 			return $rootScope.$new();
 		}])
 
-		.mockService('APIService', ['___$http', function(mockHttp){
+		.mockService('APIService', [quickmock.getMockName('$http'), function(mockHttp){
 			return angular.copy(mockHttp);
 		}])
 

@@ -1,12 +1,13 @@
 (function(){
 
-	describe('red-blue-box Directive', function () {
+	fdescribe('red-blue-box Directive', function () {
 		var redBlueBox;
 
 		beforeEach(function(){
 			redBlueBox = quickmock({
 				providerName: 'redBlueBox',
 				moduleName: 'QuickMockDemo',
+                mockModules: ['QuickMockDemoMocks'],
 				html: '<div red-blue-box></div>'
 			});
 			redBlueBox.$compile();
