@@ -31,6 +31,11 @@
 				var currProviderName = providerData[2][0];
 				if(currProviderName === opts.providerName){
 					var currProviderDeps = providerData[2][1];
+
+                    if (angular.isFunction(currProviderDeps)) {
+                        currProviderDeps = currProviderDeps.$inject || injector.annotate(currProviderDeps);
+                    }
+
 					for(var i=0; i<currProviderDeps.length - 1; i++){
 						var depName = currProviderDeps[i];
 						mocks[depName] = getMockForProvider(depName, currProviderDeps, i);
