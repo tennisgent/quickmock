@@ -304,22 +304,24 @@
 
 		.service('InjectOptionalValues', ['global','ThrowError',
 			function(global, throwError){
-				var injector = global.injector(),
-					injectOption = global.options().inject;
-				if(angular.isFunction(injectOption)){
-					var annotatedDeps = injector.annotate(injectOption) || [],
-						injectedDeps = [];
-					if(annotatedDeps.length){
-						angular.forEach(annotatedDeps, function(depName){
-							if(injector.has(depName)){
-								injectedDeps.push(injector.get(depName))
-							}else{
-								throwError('quickmock: cannot inject provider ' + depName + ' because provider doesn\'t exist');
-							}
-						});
-						injectOption.apply(injectOption, injectedDeps);
+				return function InjectOptionalValues(){
+					var injector = global.injector(),
+						injectOption = global.options().inject;
+					if(angular.isFunction(injectOption)){
+						var annotatedDeps = injector.annotate(injectOption) || [],
+							injectedDeps = [];
+						if(annotatedDeps.length){
+							angular.forEach(annotatedDeps, function(depName){
+								if(injector.has(depName)){
+									injectedDeps.push(injector.get(depName))
+								}else{
+									throwError('quickmock: cannot inject provider ' + depName + ' because provider doesn\'t exist');
+								}
+							});
+							injectOption.apply(injectOption, injectedDeps);
+						}
 					}
-				}
+				};
 			}
 		])
 
