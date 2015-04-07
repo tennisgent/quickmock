@@ -15,14 +15,16 @@
 		});
 
 	describe('DummyFactory', function() {
-		var dummy;
+		var dummy, httpBackend;
 
 		beforeEach(function(){
 			dummy = quickmock({
 				providerName: 'DummyFactory',
 				moduleName: 'SampleModule',
 				inject: function($httpBackend){
-					console.log('httpBackend', $httpBackend);
+					// This allows you to inject other services that you might want access
+					// to but that your service doesn't depend on directly
+					httpBackend = $httpBackend;
 				}
 			});
 		});
@@ -32,6 +34,12 @@
 			it('should have a get method', function(){
 				expect(dummy.get).toEqual(jasmine.any(Function));
 			});
+
+			it('should inject $httpBackend', function(){
+				expect(httpBackend.expect).toEqual(jasmine.any(Function));
+			});
+
+			// Assume $httpBackend was used somewhere down in further tests
 
 		});
 

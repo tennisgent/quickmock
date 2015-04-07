@@ -434,8 +434,6 @@
 						directive.$element = angular.element(html);
 						prefixProviderDependencies(opts.providerName);
 
-						console.log(metadata);
-
 						$compile(directive.$element)(directive.$scope);
 
 						unprefixProviderDependencies(opts.providerName);
