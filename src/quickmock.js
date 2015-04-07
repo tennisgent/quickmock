@@ -274,27 +274,51 @@
 					}
 					options.mockModules = options.mockModules || [];
 					options.mocks = options.mocks || {};
+					options.inject = options.inject || null;
 					return options;
 				}
 			}
 		])
 
-		.service('MockOutProvider', ['global','GetAllMocksForProvider','SetupInitializer','SanitizeProvider','ProviderType',
-			function(global, getAllMocksForProvider, setupInitializer, sanitizeProvider, ProviderType){
+		.service('MockOutProvider', ['global','GetAllMocksForProvider','SetupInitializer','SanitizeProvider','ProviderType','InjectOptionalValues',
+			function(global, getAllMocksForProvider, setupInitializer, sanitizeProvider, ProviderType, injectOptionalValues){
 				return function mockOutProvider(){
 					var provider = {};
                     angular.forEach(global.invokeQueue(), function(providerData) {
                         sanitizeProvider(providerData);
                     });
 					if(global.providerType() !== ProviderType.unknown){
-						global.mocks(getAllMocksForProvider(global.options().providerName));
+						var mocks = getAllMocksForProvider(global.options().providerName);
+						global.mocks(mocks);
                         provider = setupInitializer();
 						provider.$injector = global.injector();
+						injectOptionalValues();
 					}
 					angular.forEach(global.invokeQueue(), function(providerData) {
 						sanitizeProvider(providerData);
 					});
 					return provider;
+				}
+			}
+		])
+
+		.service('InjectOptionalValues', ['global','ThrowError',
+			function(global, throwError){
+				var injector = global.injector(),
+					injectOption = global.options().inject;
+				if(angular.isFunction(injectOption)){
+					var annotatedDeps = injector.annotate(injectOption) || [],
+						injectedDeps = [];
+					if(annotatedDeps.length){
+						angular.forEach(annotatedDeps, function(depName){
+							if(injector.has(depName)){
+								injectedDeps.push(injector.get(depName))
+							}else{
+								throwError('quickmock: cannot inject provider ' + depName + ' because provider doesn\'t exist');
+							}
+						});
+						injectOption.apply(injectOption, injectedDeps);
+					}
 				}
 			}
 		])
