@@ -289,6 +289,7 @@
 					if(global.providerType() !== ProviderType.unknown){
 						global.mocks(getAllMocksForProvider(global.options().providerName));
                         provider = setupInitializer();
+						provider.$injector = global.injector();
 					}
 					angular.forEach(global.invokeQueue(), function(providerData) {
 						sanitizeProvider(providerData);
