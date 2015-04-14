@@ -291,8 +291,10 @@
 						var mocks = getAllMocksForProvider(global.options().providerName);
 						global.mocks(mocks);
                         provider = setupInitializer();
-						provider.$injector = global.injector();
-						injectOptionalValues();
+						if(provider){
+							provider.$injector = global.injector();
+							injectOptionalValues();
+						}
 					}
 					angular.forEach(global.invokeQueue(), function(providerData) {
 						sanitizeProvider(providerData);
@@ -439,6 +441,7 @@
 						unprefixProviderDependencies(opts.providerName);
 						directive.$isoScope = directive.$element.isolateScope();
 						directive.$localScope = directive.$element.scope();
+						directive.$ctrl = directive.$element.controller(opts.providerName);
 						directive.$scope.$digest();
 					};
 				};

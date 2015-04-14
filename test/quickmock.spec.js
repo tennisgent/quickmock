@@ -216,9 +216,8 @@
 
 				it('should return the intialized provider', function(){
 					mocks.SetupInitializer.and.returnValue({key: 'value'});
-					expect(mockOutProvider()).toEqual({key: 'value'})
+					expect(mockOutProvider().key).toEqual('value');
 				});
-
             });
 
 			describe(', if provider has an unknown type', function () {
