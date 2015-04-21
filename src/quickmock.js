@@ -154,7 +154,7 @@
         ]);
 
 
-	angular.module('quickmock', ['ngMock', 'quickmock.mockHelper'])
+	angular.module('quickmock', ['ng', 'ngMock', 'quickmock.mockHelper'])
 
 		.run(['quickmock','global',
 			function(quickmock, global){
@@ -223,7 +223,7 @@
 			function(global, assertRequiredOptions, mockOutProvider, getProviderType){
 				return function quickmock(opts){
 					var options = assertRequiredOptions(opts),
-						allModules = opts.mockModules.concat(['ngMock']),
+						allModules = opts.mockModules.concat(['ng','ngMock']),
                         injector = angular.injector(allModules.concat([opts.moduleName])),
 						modObj = angular.module(opts.moduleName),
 						invokeQueue = modObj._invokeQueue || [];
