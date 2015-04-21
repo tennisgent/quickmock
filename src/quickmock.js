@@ -280,8 +280,8 @@
 			}
 		])
 
-		.service('MockOutProvider', ['global','GetAllMocksForProvider','SetupInitializer','SanitizeProvider','ProviderType','InjectOptionalValues',
-			function(global, getAllMocksForProvider, setupInitializer, sanitizeProvider, ProviderType, injectOptionalValues){
+		.service('MockOutProvider', ['global','GetAllMocksForProvider','SetupInitializer','SanitizeProvider','ProviderType','InjectOptionalValues','ExecuteModuleConfig',
+			function(global, getAllMocksForProvider, setupInitializer, sanitizeProvider, ProviderType, injectOptionalValues, executeModuleConfig){
 				return function mockOutProvider(){
 					var provider = {};
                     angular.forEach(global.invokeQueue(), function(providerData) {
@@ -294,6 +294,7 @@
 						if(provider){
 							provider.$injector = global.injector();
 							injectOptionalValues();
+							executeModuleConfig();
 						}
 					}
 					angular.forEach(global.invokeQueue(), function(providerData) {
@@ -303,6 +304,14 @@
 				}
 			}
 		])
+
+		.service('ExecuteModuleConfig', ['global', function(global) {
+			return function executeModuleConfig() {
+				if (global.options().moduleConfig) {
+					return angular.mock.module.apply(angular.mock.module, global.options().moduleConfig);
+				}
+			};
+		}])
 
 		.service('InjectOptionalValues', ['global','ThrowError',
 			function(global, throwError){
