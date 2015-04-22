@@ -43,7 +43,9 @@
 		}])
 
 		.mockFactory('$scope', ['$rootScope', function($rootScope){
-			return $rootScope.$new();
+			var scope = $rootScope.$new();
+            scope.ZACKMADETHIS = true;
+            return scope;
 		}])
 
 		.mockService('APIService', [quickmock.getMockName('$http'), function(mockHttp){

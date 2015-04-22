@@ -26,6 +26,22 @@
 			expect(redBlueBox.$element.hasClass('blue')).toBe(true);
 		});
 
+        it('should watch for changes in color', function(){
+            spyOn(redBlueBox.$mocks.$scope, '$watch');
+            redBlueBox.$compile();
+            expect(redBlueBox.$mocks.$scope.$watch).toHaveBeenCalledWith('vm.isRed', jasmine.any(Function));
+        });
+
+        it('should show a notification message when the color changes to red', function(){
+            console.log(redBlueBox.$mocks);
+            redBlueBox.$ctrl.isRed = false;
+            redBlueBox.$scope.$digest();
+            expect(redBlueBox.$mocks.NotificationService.error).not.toHaveBeenCalled();
+            redBlueBox.$ctrl.isRed = true;
+            redBlueBox.$scope.$digest();
+            expect(redBlueBox.$mocks.NotificationService.error).toHaveBeenCalled();
+        });
+
 	});
 
 })();

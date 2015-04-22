@@ -50,8 +50,8 @@
             }
         ])
 
-        .service('decorateDirective', ['AnnotateFunction','Metadata','ProviderType','global',
-            function(annotateFunction, metadata, ProviderType, global){
+        .service('decorateDirective', ['AnnotateFunction','Metadata','ProviderType','global','GetMockForDependency',
+            function(annotateFunction, metadata, ProviderType, global, getMockForDependency){
                 return function decorateDirective(modObj){
                     var directiveFunc = modObj.directive;
                     modObj.directive = function(providerName, initFunc){
@@ -76,6 +76,14 @@
 									});
 								}
 								metadata.set(providerName, 'controller', defObj.controller);
+                                var providerData = getMockForDependency(providerName),
+                                    ctrlInitFunc = providerData[2][1].pop();
+                                angular.forEach(defObj.controller, function(ctrlDep){
+                                    if(angular.isString(ctrlDep)){
+                                        providerData[2][1].push(ctrlDep);
+                                    }
+                                });
+                                providerData[2][1].push(ctrlInitFunc);
 							}
 
                             return defObj;
@@ -154,7 +162,7 @@
         ]);
 
 
-	angular.module('quickmock', ['ng', 'ngMock', 'quickmock.mockHelper'])
+	angular.module('quickmock', ['ngMock', 'quickmock.mockHelper'])
 
 		.run(['quickmock','global',
 			function(quickmock, global){
@@ -223,7 +231,7 @@
 			function(global, assertRequiredOptions, mockOutProvider, getProviderType){
 				return function quickmock(opts){
 					var options = assertRequiredOptions(opts),
-						allModules = opts.mockModules.concat(['ng','ngMock']),
+						allModules = opts.mockModules.concat(['ngMock']),
                         injector = angular.injector(allModules.concat([opts.moduleName])),
 						modObj = angular.module(opts.moduleName),
 						invokeQueue = modObj._invokeQueue || [];
@@ -280,8 +288,8 @@
 			}
 		])
 
-		.service('MockOutProvider', ['global','GetAllMocksForProvider','SetupInitializer','SanitizeProvider','ProviderType','InjectOptionalValues','ExecuteModuleConfig',
-			function(global, getAllMocksForProvider, setupInitializer, sanitizeProvider, ProviderType, injectOptionalValues, executeModuleConfig){
+		.service('MockOutProvider', ['global','GetAllMocksForProvider','SetupInitializer','SanitizeProvider','ProviderType','InjectOptionalValues',
+			function(global, getAllMocksForProvider, setupInitializer, sanitizeProvider, ProviderType, injectOptionalValues){
 				return function mockOutProvider(){
 					var provider = {};
                     angular.forEach(global.invokeQueue(), function(providerData) {
@@ -294,7 +302,6 @@
 						if(provider){
 							provider.$injector = global.injector();
 							injectOptionalValues();
-							executeModuleConfig();
 						}
 					}
 					angular.forEach(global.invokeQueue(), function(providerData) {
@@ -304,14 +311,6 @@
 				}
 			}
 		])
-
-		.service('ExecuteModuleConfig', ['global', function(global) {
-			return function executeModuleConfig() {
-				if (global.options().moduleConfig) {
-					return angular.mock.module.apply(angular.mock.module, global.options().moduleConfig);
-				}
-			};
-		}])
 
 		.service('InjectOptionalValues', ['global','ThrowError',
 			function(global, throwError){
@@ -390,13 +389,8 @@
 			}
 		])
 
-	/**
-	 * Propogate dependencies in the directive's controller up to the directive
-	 * So the $mocks object contains refs to the controller's deps
-	 */
-
-		.service('GetMockForDependency', ['global','GetProviderType','QuickmockLog','ProviderType',
-			function(global, getProviderType, quickmockLog, ProviderType){
+		.service('GetMockForDependency', ['global','GetProviderType','QuickmockLog','ProviderType','ThrowError',
+			function(global, getProviderType, quickmockLog, ProviderType, ThrowError){
 				return function getMockForDependency(depName, providerData, i){
 					var opts = global.options(),
 						injector = global.injector(),
@@ -404,7 +398,10 @@
 						depType = getProviderType(depName),
 						mockServiceName = depName;
 					if(opts.useActualDependencies === true || opts.mocks[mockServiceName] === global.useActual()){
-						quickmockLog('quickmock: Using actual implementation of "' + depName + '" ' + depType + ' instead of mock');
+                        if(injector.has(mockServiceName)){
+                            quickmockLog('quickmock: Using actual implementation of "' + depName + '" ' + depType + ' instead of mock');
+                            return global.injector().get(mockServiceName);
+                        }
 					}else if(depType === ProviderType.value || depType === ProviderType.constant){
 						if(injector.has(mockPrefix + depName)){
 							mockServiceName = mockPrefix + depName;
@@ -412,27 +409,21 @@
 						}else{
 							quickmockLog('quickmock: Using actual implementation of "' + depName + '" ' + depType + ' instead of mock');
 						}
-					}else if(depName.indexOf(mockPrefix) !== 0 || depType === ProviderType.unknown){
+					}else if(/*depName.indexOf(mockPrefix) !== 0 || */depType === ProviderType.unknown){
 						mockServiceName = mockPrefix + depName;
                         providerData[2][1][i] = mockServiceName;
 					}
 					if(!injector.has(mockServiceName)){
-						if(opts.useActualDependencies){
-							quickmockLog('quickmock: Using actual implementation of "' + depName + '" ' + depType + ' instead of mock');
-							mockServiceName = mockServiceName.replace(mockPrefix, '');
-						}else {
-							throw new Error('quickmock: Cannot inject mock for "' + depName + '" because no such mock exists. Please write a mock ' + depType + ' called "'
-							+ mockServiceName + '" (or set the useActualDependencies to true) and try again.');
-						}
+                        ThrowError('quickmock: Cannot inject mock for "' + depName + '" because no such mock exists. Please write a mock ' + depType + ' for "' + depName + '" and try again.');
 					}
-					return global.injector().get(mockServiceName);
+					return injector.get(mockServiceName);
 				};
 			}
 		])
 
 		.service('QuickmockCompile', ['global', 'GenerateHtmlStringFromObject','PrefixProviderDependencies','UnprefixProviderDependencies','Metadata',
 			function(global, generateHtmlStringFromObject, prefixProviderDependencies, unprefixProviderDependencies, metadata){
-				return function(directive){
+				return function quickmockCompileWrapper(directive){
 					return function quickmockCompile(html){
 						var opts = global.options(),
                             $compile = global.injector().get('$compile');

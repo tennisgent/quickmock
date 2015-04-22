@@ -438,7 +438,7 @@
 				mocks = getMocks();
 				module('quickmock');
 				module(function($provide){
-					angular.forEach(['global','GetProviderType','QuickmockLog'], function(mock){
+					angular.forEach(['global','GetProviderType','QuickmockLog','ThrowError'], function(mock){
 						$provide.value(mock, mocks[mock]);
 					});
 				});
@@ -452,35 +452,66 @@
 				injector.has.and.returnValue(true);
 				mocks.global.injector.and.returnValue(injector);
 				mocks.global.mockPrefix.and.returnValue('___');
+                mocks.GetProviderType.and.returnValue(mocks.ProviderType.factory);
 			});
 
-			it('should attempt to use actual implementation if useActualDependencies flag is set', function(){
+			it('should use actual implementation if useActualDependencies flag is set', function(){
 				mocks.options.useActualDependencies = true;
-				getMockForDep(dep, [], 0);
+				getMockForDep(dep, providerData, 0);
 				expect(injector.get).toHaveBeenCalledWith(dep);
 			});
 
-			it('should attempt to use actual implementation if the mock\'s flag is set', function(){
-				mocks.options.mocks = {depName: mocks.global.useActual()};
-				getMockForDep(dep, [], 0);
+			it('should use actual implementation if the mock\'s flag is set', function(){
+                mocks.options.mocks = {};
+                mocks.options.mocks[dep] = mocks.global.useActual();
+				getMockForDep(dep, providerData, 0);
 				expect(injector.get).toHaveBeenCalledWith(dep);
 			});
 
-			it('should attempt to use actual implementation if the provider is a value type and a mock does not exist', function(){
+			it('should use actual implementation if the provider is a value type and a mock does not exist', function(){
 				mocks.GetProviderType.and.returnValue(mocks.ProviderType.value);
-				injector.has.and.returnValue(false);
+				injector.has.and.callFake(function(tempDep){
+                    return tempDep === dep;
+                });
 				getMockForDep(dep, providerData, 0);
-				expect(providerData[2][1][0]).toEqual(depName);
-				expect(mocks.QuickmockLog).toHaveBeenCalled();
-				expect(injector.get).toHaveBeenCalledWith('___' + dep);
+				expect(injector.get).toHaveBeenCalledWith(dep);
 			});
 
-			it('should attempt to use actual implementation if the provider is a value type', function(){
-				mocks.GetProviderType.and.returnValue(mocks.ProviderType.value);
-				getMockForDep(dep, providerData, 0);
-				expect(providerData[2][1][0]).toEqual(depName);
-				expect(injector.get).toHaveBeenCalledWith('___' + dep);
-			});
+            it('should use mock if the provider is a value type and a mock exists', function(){
+                mocks.GetProviderType.and.returnValue(mocks.ProviderType.value);
+                getMockForDep(dep, providerData, 0);
+                expect(providerData[2][1][0]).toEqual('___' + dep);
+                expect(injector.get).toHaveBeenCalledWith('___' + dep);
+            });
+
+            it('should use actual implementation if the provider is a constant type and a mock does not exist', function(){
+                mocks.GetProviderType.and.returnValue(mocks.ProviderType.constant);
+                injector.has.and.callFake(function(tempDep){
+                    return tempDep === dep;
+                });
+                getMockForDep(dep, providerData, 0);
+                expect(injector.get).toHaveBeenCalledWith(dep);
+            });
+
+            it('should use mock if the provider is a constant type and a mock exists', function(){
+                mocks.GetProviderType.and.returnValue(mocks.ProviderType.constant);
+                getMockForDep(dep, providerData, 0);
+                expect(providerData[2][1][0]).toEqual('___' + dep);
+                expect(injector.get).toHaveBeenCalledWith('___' + dep);
+            });
+
+            it('should use mock if the provider type is unknown', function(){
+                mocks.GetProviderType.and.returnValue(mocks.ProviderType.unknown);
+                getMockForDep(dep, providerData, 0);
+                expect(providerData[2][1][0]).toEqual('___' + dep);
+                expect(injector.get).toHaveBeenCalledWith('___' + dep);
+            });
+
+            it('should throw an error if the required mock does not exist', function(){
+                injector.has.and.returnValue(false);
+                getMockForDep(dep, providerData, 0);
+                expect(mocks.ThrowError).toHaveBeenCalled();
+            });
 
 		});
 
