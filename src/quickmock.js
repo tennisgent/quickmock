@@ -50,8 +50,8 @@
             }
         ])
 
-        .service('decorateDirective', ['AnnotateFunction','Metadata','ProviderType','global','GetMockForDependency',
-            function(annotateFunction, metadata, ProviderType, global, getMockForDependency){
+        .service('decorateDirective', ['AnnotateFunction','Metadata','ProviderType','global','GetFromInvokeQueue',
+            function(annotateFunction, metadata, ProviderType, global, getFromInvokeQueue){
                 return function decorateDirective(modObj){
                     var directiveFunc = modObj.directive;
                     modObj.directive = function(providerName, initFunc){
@@ -66,7 +66,9 @@
 								}else if(angular.isString(defObj.controller)){
 									var ctrlName = defObj.controller;
 									if(ctrlName.indexOf(' as ') !== -1){
-										ctrlName = ctrlName.split(' as ')[0].trim();
+										var ctrlNameParts = ctrlName.split(' as ');
+										ctrlName = ctrlNameParts[0];
+										defObj.controllerAs = ctrlNameParts[1];
 									}
 									var ctrlDeps = metadata.get(ctrlName, 'dependencies');
 									angular.forEach(ctrlDeps, function(dep, i){
@@ -76,16 +78,7 @@
 									});
 								}
 								metadata.set(providerName, 'controller', defObj.controller);
-                                var providerData = getMockForDependency(providerName),
-                                    ctrlInitFunc = providerData[2][1].pop();
-                                angular.forEach(defObj.controller, function(ctrlDep){
-                                    if(angular.isString(ctrlDep)){
-                                        providerData[2][1].push(ctrlDep);
-                                    }
-                                });
-                                providerData[2][1].push(ctrlInitFunc);
 							}
-
                             return defObj;
                         });
 						metadata.set(providerName, 'dependencies', annotatedDependencies);
@@ -169,7 +162,7 @@
 				quickmock.setMockPrefix = global.mockPrefix;
 				quickmock.getMockPrefix = global.mockPrefix;
 				quickmock.muteLogs = global.muteLogs;
-				quickmock.getMockName = function getMockName(providerName){
+				quickmock.getMockName = function(providerName){
 					return global.mockPrefix() + providerName;
 				};
 				window.quickmock = quickmock;
@@ -374,81 +367,61 @@
 			}
 		])
 
-		.service('GetAllMocksForProvider', ['global', 'getMockName','GetFromInvokeQueue','quickmockLog','ThrowError','getProviderType',
-			function(global, getMockName, getFromInvokeQueue, quickmockLog, throwError, getProviderType){
+		.service('GetAllMocksForProvider', ['global','GetFromInvokeQueue','GetMockForProvider',
+			function(global, getFromInvokeQueue, getMockForProvider){
 				return function getAllMocksForProvider(providerName){
 					var mocks = {},
-						providerData = getFromInvokeQueue(providerName),
-                        injector = global.injector();
+						providerData = getFromInvokeQueue(providerName);
 					for(var i=0; i<providerData[2][1].length - 1; i++){
 						var depName = providerData[2][1][i],
-                            depType = getProviderType(depName),
-                            mockName = getMockName(depName, depType);
-                        if(!injector.has(mockName)){
-                            throwError('quickmock: Cannot inject mock for "' + depName + '" because no such mock exists. Please write a mock ' + depType + ' for "' + depName + '" and try again.');
-                        }
-                        if(depName === mockName){
-                            quickmockLog('quickmock: Using actual implementation of the "' + depName + '" instead of mock');
-                        }
-                        providerData[2][1][i] = mockName;
-						mocks[depName] = injector.get(mockName);
+                            mock = getMockForProvider(depName);
+						providerData[2][1][i] = mock.$mockName;
+						mocks[depName] = mock;
 					}
 					return mocks;
 				};
 			}
 		])
 
-		//.service('GetMockForDependency', ['global','GetProviderType','QuickmockLog','ProviderType','ThrowError',
-		//	function(global, getProviderType, quickmockLog, ProviderType, ThrowError){
-		//		return function getMockForDependency(depName, providerData, i){
-		//			var opts = global.options(),
-		//				injector = global.injector(),
-		//				mockPrefix = global.mockPrefix(),
-		//				depType = getProviderType(depName),
-		//				mockServiceName = depName;
-		//			if(opts.useActualDependencies === true || opts.mocks[mockServiceName] === global.useActual()){
-         //               if(injector.has(mockServiceName)){
-         //                   quickmockLog('quickmock: Using actual implementation of "' + depName + '" ' + depType + ' instead of mock');
-         //                   return global.injector().get(mockServiceName);
-         //               }
-		//			}else if(depType === ProviderType.value || depType === ProviderType.constant){
-		//				if(injector.has(mockPrefix + depName)){
-		//					mockServiceName = mockPrefix + depName;
-		//					providerData[2][1][i] = mockServiceName;
-		//				}else{
-		//					quickmockLog('quickmock: Using actual implementation of "' + depName + '" ' + depType + ' instead of mock');
-		//				}
-		//			}else if(/*depName.indexOf(mockPrefix) !== 0 || */depType === ProviderType.unknown){
-		//				mockServiceName = mockPrefix + depName;
-         //               providerData[2][1][i] = mockServiceName;
-		//			}
-		//			if(!injector.has(mockServiceName)){
-         //               ThrowError('quickmock: Cannot inject mock for "' + depName + '" because no such mock exists. Please write a mock ' + depType + ' for "' + depName + '" and try again.');
-		//			}
-		//			return injector.get(mockServiceName);
-		//		};
-		//	}
-		//])
+		.service('GetMockForProvider', ['global', 'GetProviderType', 'QuickmockLog', 'GetMockName','ThrowError',
+			function(global, getProviderType, quickmockLog, getMockName, throwError){
+				return function getMockForProvider(depName){
+					var depType = getProviderType(depName),
+						mockName = getMockName(depName, depType),
+						injector = global.injector();
+					if(!injector.has(mockName)){
+						throwError('quickmock: Cannot inject mock for "' + depName + '" because no such mock exists. Please write a mock ' + depType + ' for "' + depName + '" and try again.');
+					}
+					if(depName === mockName){
+						quickmockLog('quickmock: Using actual implementation of the "' + depName + '" instead of mock');
+					}
+					var mock = injector.get(mockName);
+					mock.$mockName = mockName;
+					return mock;
+				};
+			}
+		])
 
-        .service('getMockName', ['global','GetProviderType','ProviderType',
+        .service('GetMockName', ['global','GetProviderType','ProviderType',
             function(global, getProviderType, ProviderType){
                 return function getMockName(providerName, providerType){
+					if(providerName && providerName.indexOf && providerName.indexOf(global.mockPrefix()) === 0){
+						return providerName;
+					}
                     providerType = providerType || getProviderType(providerName);
-                    var opts = global.options(),
-                        mockPrefix = global.mockPrefix(),
-                        mockServiceName = providerName;
-                    if(opts.useActualDependencies || opts.mocks[mockServiceName] === global.useActual()){
-                        return mockServiceName;
-                    }else if(providerType === ProviderType.value || providerType === ProviderType.constant || providerType === ProviderType.unknown){
-                        return mockPrefix + providerName;
+                    var opts = global.options();
+                    if(opts.useActualDependencies || opts.mocks[providerName] === global.useActual()){
+                        return providerName;
+                    }else if(providerType === ProviderType.value || providerType === ProviderType.constant){
+                        return providerName;
                     }
-                    return mockServiceName;
+                    return global.mockPrefix() + providerName;
                 };
             }
         ])
 
-		.service('QuickmockCompile', ['global', 'GenerateHtmlStringFromObject','PrefixProviderDependencies','UnprefixProviderDependencies','Metadata',
-			function(global, generateHtmlStringFromObject, prefixProviderDependencies, unprefixProviderDependencies, metadata){
+		.service('QuickmockCompile', ['global', 'GenerateHtmlStringFromObject','PrefixProviderDependencies','UnprefixProviderDependencies','Metadata','GetMockForProvider',
+			function(global, generateHtmlStringFromObject, prefixProviderDependencies, unprefixProviderDependencies, metadata, getMockForProvider){
 				return function quickmockCompileWrapper(directive){
 					return function quickmockCompile(html){
 						var opts = global.options(),
@@ -463,6 +436,14 @@
 						prefixProviderDependencies(opts.providerName);
 
 						$compile(directive.$element)(directive.$scope);
+
+						var directiveMetadata = metadata.get(opts.providerName);
+						angular.forEach(directiveMetadata.controller, function(ctrlDep){
+							if(angular.isString(ctrlDep)){
+								ctrlDep = ctrlDep.replace(global.mockPrefix(), '');
+								directive.$mocks[ctrlDep] = getMockForProvider(ctrlDep);
+							}
+						});
 
 						unprefixProviderDependencies(opts.providerName);
 						directive.$isoScope = directive.$element.isolateScope();

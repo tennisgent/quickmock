@@ -33,12 +33,11 @@
         });
 
         it('should show a notification message when the color changes to red', function(){
-            console.log(redBlueBox.$mocks);
-            redBlueBox.$ctrl.isRed = false;
-            redBlueBox.$scope.$digest();
+            redBlueBox.$isoScope.vm.isRed = false;
+            redBlueBox.$scope.$apply();
             expect(redBlueBox.$mocks.NotificationService.error).not.toHaveBeenCalled();
-            redBlueBox.$ctrl.isRed = true;
-            redBlueBox.$scope.$digest();
+            redBlueBox.$isoScope.vm.isRed = true;
+            redBlueBox.$scope.$apply();
             expect(redBlueBox.$mocks.NotificationService.error).toHaveBeenCalled();
         });
 

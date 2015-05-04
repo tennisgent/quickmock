@@ -166,7 +166,7 @@
 				template: '<div class="color-box" ng-click="vm.isRed = !vm.isRed" ng-class="{red: vm.isRed, blue: !vm.isRed}"></div>',
 				scope: {},
 				controller: function($scope, NotificationService){
-                    console.log(NotificationService.error);
+                    console.log(NotificationService);
 					this.isRed = true;
                     $scope.$watch('vm.isRed', function(isRed){
                         if(isRed){

@@ -526,8 +526,8 @@
                         $provide.value(mock, mocks[mock]);
                     });
                 });
-                inject(function(_getMockName_, ProviderType){
-                    getMockName = _getMockName_;
+                inject(function(_GetMockName_, ProviderType){
+                    getMockName = _GetMockName_;
                     mocks.ProviderType = ProviderType;
                 });
                 mocks.global.mockPrefix.and.returnValue('___');
