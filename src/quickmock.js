@@ -1,4 +1,5 @@
 (function(angular){
+	var providers;
 
     angular.module('quickmock.mockHelper', ['quickmock'])
 
@@ -8,6 +9,15 @@
                 angular.module = decorateAngularModule;
             }
         ])
+
+		.config(['$provide', function($provide){
+			providers = {
+				factory: $provide.factory,
+				service: $provide.service,
+				constant: $provide.constant,
+				value: $provide.value
+			};
+		}])
 
         .service('origModuleFunc', [
             function(){
@@ -23,9 +33,9 @@
             }
         ])
 
-        .service('AnnotateFunction', ['$injector','global','Metadata','ProviderType',
-            function($injector, global, metadata, ProviderType){
-                return function annotateFunction(initFunc, prefixDeps){
+        .service('AnnotateFunction', ['$injector','global','ProvideScopeOrElement',
+            function($injector, global, provideScopeOrElement){
+                return function annotateFunction(initFunc, prefixDeps, providerName){
                     var annotatedDependencies;
                     if(angular.isFunction(initFunc)){
                         annotatedDependencies = $injector.annotate(initFunc);
@@ -38,11 +48,7 @@
                     }
 					if(prefixDeps){
 						for(var i=0; i<annotatedDependencies.length-1; i++){
-							var depName = annotatedDependencies[i],
-								depType = metadata.get(depName, 'type');
-							if(depType !== ProviderType.value && depType !== ProviderType.constant){
-								annotatedDependencies[i] = global.mockPrefix() + depName;
-							}
+							annotatedDependencies[i] = provideScopeOrElement(annotatedDependencies[i], providerName);
 						}
 					}
                     return annotatedDependencies;
@@ -50,19 +56,19 @@
             }
         ])
 
-        .service('decorateDirective', ['AnnotateFunction','Metadata','ProviderType','global','GetFromInvokeQueue',
-            function(annotateFunction, metadata, ProviderType, global, getFromInvokeQueue){
+        .service('decorateDirective', ['AnnotateFunction','Metadata','ProviderType','global','ProvideScopeOrElement',
+            function(annotateFunction, metadata, ProviderType, global, provideScopeOrElement){
                 return function decorateDirective(modObj){
                     var directiveFunc = modObj.directive;
                     modObj.directive = function(providerName, initFunc){
-                        var annotatedDependencies = annotateFunction(initFunc, true),
+                        var annotatedDependencies = annotateFunction(initFunc, true, providerName),
                             origFunc = annotatedDependencies.pop();
 						metadata.set(providerName, 'type', ProviderType.directive);
                         annotatedDependencies.push(function directiveWrapper(){
                             var defObj = origFunc.apply(origFunc, arguments);
 							if(defObj.controller){
 								if(angular.isFunction(defObj.controller) || angular.isArray(defObj.controller)){
-									defObj.controller = annotateFunction(defObj.controller, true);
+									defObj.controller = annotateFunction(defObj.controller, true, providerName);
 								}else if(angular.isString(defObj.controller)){
 									var ctrlName = defObj.controller;
 									if(ctrlName.indexOf(' as ') !== -1){
@@ -73,7 +79,7 @@
 									var ctrlDeps = metadata.get(ctrlName, 'dependencies');
 									angular.forEach(ctrlDeps, function(dep, i){
 										if(angular.isString(dep)){
-											ctrlDeps[i] = global.modPrefix() + dep;
+											ctrlDeps[i] = provideScopeOrElement(dep, providerName);
 										}
 									});
 								}
@@ -88,6 +94,21 @@
             }
         ])
 
+		.service('ProvideScopeOrElement', ['Metadata', 'GetMockName', function(metadata, getMockName){
+			return function provideScopeOrElement(depName, providerName){
+				//return depName;
+				if((depName === '$scope' || depName === '$element') && providers.factory){
+					var factoryName = depName + '_' + providerName;
+					providers.factory(factoryName, function(){
+						return metadata.get(providerName, depName);
+					});
+					return factoryName;
+				}else{
+					return getMockName(depName);
+				}
+			}
+		}])
+
         .service('decorateAllMethods', ['decorateDirective','AnnotateFunction','ProviderType','Metadata',
             function(decorateDirective, annotateFunction, types, metadata){
                 return function decorateStandardMethod(modObj){
@@ -97,7 +118,7 @@
                         if(modObj[method].name !== 'quickmockWrapper'){
 							var origMethod = modObj[method];
                             modObj[method] = function quickmockWrapper(providerName, initFunc){
-								var annotatedDependencies = annotateFunction(initFunc);
+								var annotatedDependencies = annotateFunction(initFunc, false, providerName);
 								metadata.set(providerName, 'type', types[method]);
 								metadata.set(providerName, 'dependencies', annotatedDependencies);
                                 return origMethod(providerName, annotatedDependencies);
@@ -190,6 +211,7 @@
 					}
 				});
 				methods.invokeQueue = function () {
+					globalVars.modObj = globalVars.modObj || {};
 					return arguments.length ? (globalVars.modObj._invokeQueue = arguments[0]) : globalVars.modObj._invokeQueue;
 				};
 				return methods;
@@ -434,6 +456,10 @@
 						}
 						directive.$element = angular.element(html);
 						prefixProviderDependencies(opts.providerName);
+
+						directive.$scope.FROM_ELEMENT = opts.providerName;
+						metadata.set(opts.providerName, '$scope', directive.$scope);
+						metadata.set(opts.providerName, '$element', directive.$element);
 
 						$compile(directive.$element)(directive.$scope);
 
