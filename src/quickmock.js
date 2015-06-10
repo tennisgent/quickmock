@@ -24,6 +24,12 @@
 			invokeQueue = invokeQueue.concat(angular.module(modName)._invokeQueue);
 		});
 
+		angular.forEach(invokeQueue, function(providerData) {
+			// Remove any prefixed dependencies that persisted from a previous call,
+			// and check for any non-annotated services
+			sanitizeProvider(providerData, injector);
+		});
+
 		if(providerType){
 			// Loop through invokeQueue, find this provider's dependencies and prefix
 			// them so Angular will inject the mocked versions
