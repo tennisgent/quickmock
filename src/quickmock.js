@@ -30,6 +30,10 @@
 			sanitizeProvider(providerData, injector);
 		});
 
+		if(opts.inject){
+			injector.invoke(opts.inject);
+		}
+
 		if(providerType){
 			// Loop through invokeQueue, find this provider's dependencies and prefix
 			// them so Angular will inject the mocked versions
