@@ -119,7 +119,9 @@
 		function getMockForProvider(depName, currProviderDeps, i){
 			var depType = getProviderType(depName, invokeQueue),
 				mockServiceName = depName;
-			if(opts.mocks[mockServiceName] && opts.mocks[mockServiceName] === quickmock.USE_ACTUAL){
+			if(opts.mocks[mockServiceName] && opts.mocks[mockServiceName] !== quickmock.USE_ACTUAL){
+				return opts.mocks[mockServiceName];
+			}else if(opts.mocks[mockServiceName] && opts.mocks[mockServiceName] === quickmock.USE_ACTUAL){
 				quickmockLog('quickmock: Using actual implementation of "' + depName + '" ' + depType + ' instead of mock');
 			}else if(depType === 'value' || depType === 'constant'){
 				if(injector.has(mockPrefix + depName)){
