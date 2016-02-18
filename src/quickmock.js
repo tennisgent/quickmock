@@ -24,12 +24,6 @@
 			invokeQueue = invokeQueue.concat(angular.module(modName)._invokeQueue);
 		});
 
-		angular.forEach(invokeQueue, function(providerData) {
-			// Remove any prefixed dependencies that persisted from a previous call,
-			// and check for any non-annotated services
-			sanitizeProvider(providerData, injector);
-		});
-
 		if(opts.inject){
 			injector.invoke(opts.inject);
 		}
@@ -42,11 +36,11 @@
 				if(currProviderName === opts.providerName){
 					var currProviderDeps = providerData[2][1];
 
-                    if (angular.isFunction(currProviderDeps)) {
-                        currProviderDeps = currProviderDeps.$inject || injector.annotate(currProviderDeps);
-                    }
+					if (angular.isFunction(currProviderDeps)) {
+						currProviderDeps = currProviderDeps.$inject || injector.annotate(currProviderDeps);
+					}
 
-					for(var i=0; i<currProviderDeps.length - 1; i++){
+					for(var i=0; i<currProviderDeps.length; i++) if(!angular.isFunction(currProviderDeps[i])){
 						var depName = currProviderDeps[i];
 						mocks[depName] = getMockForProvider(depName, currProviderDeps, i);
 					}
