@@ -4,7 +4,7 @@
 
 	quickmock.MOCK_PREFIX = mockPrefix = (quickmock.MOCK_PREFIX || '___');
 	quickmock.USE_ACTUAL = 'USE_ACTUAL_IMPLEMENTATION';
-	quickmock.MUTE_LOGS = false;
+	quickmock.MUTE_LOGS = true;
 
 	function quickmock(options){
 		opts = assertRequiredOptions(options);
