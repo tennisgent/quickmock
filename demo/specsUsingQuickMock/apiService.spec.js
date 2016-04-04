@@ -2,13 +2,17 @@
 	'use strict';
 
 	describe('APIService', function () {
-		var apiService;
+		var apiService, httpBackend;
 
 		beforeEach(function(){
 		    apiService = quickmock({
 				providerName: 'APIService',
 				moduleName: 'QuickMockDemo',
-				mockModules: ['QuickMockDemoMocks']
+				mockModules: ['QuickMockDemoMocks'],
+				inject: function($httpBackend){
+					// allows you to inject any services you may need during testing
+					httpBackend = $httpBackend;
+				}
 			});
 		});
 

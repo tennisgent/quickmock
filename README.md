@@ -162,6 +162,7 @@ As shown in the example above, a call to quickmock accepts a config object and r
 * `useActualDependencies` (Boolean) - If quickmock cannot find a mock for a required dependency, it will thrown an exception. If, instead, you wish to delegate to the actual implementations of the dependencies instead of mocking them out, set this flag to `true`.
 * `spyOnProviderMethods` (Boolean) - If true, quickmock will automatically spy on the methods of the provider. This will give you access to all of the usual spy functionality for any methods on your provider, but will also call through to the actual implementation so you can test all required functionality. This is very useful when testing certain provider methods that call one another.
 * `html` (String|Object) - For directives only, this is the default html that will be compiled when `.$compile()` is called (this is explained below).
+* `inject` (Function) - An injection callback that will return instantiated angular providers. Similar to [Angular's global `inject(...)`](https://docs.angularjs.org/api/ngMock/function/angular.mock.inject) method. You can see an [example here](https://github.com/tennisgent/quickmock/blob/master/demo/specsUsingQuickMock/apiService.spec.js#L12). Using the Angular version will not work with quickmock. If you need to inject services/providers, you must use this method. 
 
 
 ####The Returned Object
