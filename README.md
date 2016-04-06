@@ -162,6 +162,7 @@ As shown in the example above, a call to quickmock accepts a config object and r
 * `useActualDependencies` (Boolean) - If quickmock cannot find a mock for a required dependency, it will thrown an exception. If, instead, you wish to delegate to the actual implementations of the dependencies instead of mocking them out, set this flag to `true`.
 * `spyOnProviderMethods` (Boolean) - If true, quickmock will automatically spy on the methods of the provider. This will give you access to all of the usual spy functionality for any methods on your provider, but will also call through to the actual implementation so you can test all required functionality. This is very useful when testing certain provider methods that call one another.
 * `html` (String|Object) - For directives only, this is the default html that will be compiled when `.$compile()` is called (this is explained below).
+* `inject` (Function) - An injection callback that will return instantiated angular providers. Similar to [Angular's global `inject(...)`](https://docs.angularjs.org/api/ngMock/function/angular.mock.inject) method. You can see an [example here](https://github.com/tennisgent/quickmock/blob/master/demo/specsUsingQuickMock/apiService.spec.js#L12). Using the Angular version will not work with quickmock. If you need to inject services/providers, you must use this method. 
 
 
 ####The Returned Object
@@ -302,12 +303,6 @@ The examples above are very simple. You will find more in-depth examples for eac
 For those who are curious, there are also examples of testing these same providers **without** using quickmock (for comparison). These specs are found in the [`specsWithoutUsingQuickMock`](https://github.com/tennisgent/quickmock/tree/master/demo/specsWithoutUsingQuickMock) folder.
 
 You will also find example mocks for each of these providers, as well as mocks the angular `$promise`, `$http` and `$scope` services in the [`mocks`](https://github.com/tennisgent/quickmock/tree/master/demo/mocks) folder.
-
-How do I shut it up?
---------------------
-
-You might find that quickmock logs a fair amount of information to the console. This is simply to make sure that you know what is happening behind the scenes and are aware of any possible warnings that might pop up. If you wish to turn off logging, you can simply set the `quickmock.MUTE_LOGS` flag to `true`. This will disable the logs and you won't see any data from quickmock output to the console. This DOES NOT, however, turn off exceptions that may be thrown as a result of required parameters not being available, such as `angular` being `undefined` or if you're missing required config parameters.
-
 
 It keeps saying "Cannot inject mock for *X*" ... WTF?
 -----------------------------------------------------
