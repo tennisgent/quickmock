@@ -1,6 +1,6 @@
 {
   "name": "quickmock",
-  "version": "1.0.11",
+  "version": "1.0.12",
   "description": "quickmock is an simple service for automatically injecting mocks into your AngularJS unit tests using Jasmine",
   "main": "src/quickmock.js",
   "directories": {
@@ -11,7 +11,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/tennisgent/QuickMock.git"
+    "url": "https://github.com/tennisgent/quickmock.git"
   },
   "keywords": [
     "AngularJS",
@@ -23,7 +23,7 @@
   "author": "Zack Boman <tennisgent@gmail.com> (https://github.com/tennisgent)",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/tennisgent/QuickMock/issues"
+    "url": "https://github.com/tennisgent/quickmock/issues"
   },
-  "homepage": "https://github.com/tennisgent/QuickMock"
+  "homepage": "https://github.com/tennisgent/quickmock"
 }
