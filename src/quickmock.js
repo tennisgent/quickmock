@@ -49,7 +49,7 @@
 		}
 	};
 
-	quickmock.setLogMode(quickmock.log.WARN);
+	quickmock.setLogMode(quickmock.log.NONE);
 
 	return window.quickmock = initQuickmock();
 
@@ -92,7 +92,7 @@
 	function initProvider(providerName, options){
 		var meta = metadata[providerName];
 		if(!meta){
-			warn('quickmock: unknown provider', providerName);
+			throwError('QUICKMOCK: unknown provider', providerName);
 		}
 		switch(meta.type){
 			case providers.controller:
@@ -133,7 +133,7 @@
 
 		directive.$compile = function compileDirective(html){
 			html = html || options.html;
-			if(!html){
+			if(!html || !angular.isString(html)){
 				throwError('QUICKMOCK: Cannot compile "', options.providerName, '" directive. No html string provided.');
 			}
 			directive.$element = angular.element(html);
@@ -149,7 +149,9 @@
 
 	function moduleWrapper(modName, requires, configFn){
 		if(modName === 'ng') return false;
-		var mod = origModuleFn(modName, requires, configFn);
+		var mod = origModuleFn(modName, requires, configFn),
+			origValue = mod.value,
+			origConstant = mod.constant;
 
 		angular.forEach(providers, function(methodName){
 			if(!excludedProviders[methodName] && angular.isFunction(mod[methodName])){
@@ -164,11 +166,11 @@
 
 		mod.useActual = wrapProviderActualImplementation(mod.mockFactory);
 
-		mod.mockValue = wrapProviderMockDefinition('value', mod.value, mod);
-		mod.mockConstant = wrapProviderMockDefinition('constant', mod.constant, mod);
+		mod.mockValue = wrapProviderMockDefinition('value', origValue, mod);
+		mod.mockConstant = wrapProviderMockDefinition('constant', origConstant, mod);
 
-		mod.value = wrapValueOrConstant('value', mod.value, mod);
-		mod.constant = wrapValueOrConstant('constant', mod.constant, mod);
+		mod.value = wrapValueOrConstant('value', origValue, mod);
+		mod.constant = wrapValueOrConstant('constant', origConstant, mod);
 
 		mod.run = wrapConfigOrRunBlock('run', mod);
 		mod.config = wrapConfigOrRunBlock('config', mod);
@@ -251,7 +253,8 @@
 				type: type,
 				dependencies: deps,
 				mockDependencies: angular.copy(deps),
-				moduleName: module.name
+				moduleName: module.name,
+				mockName: mockName
 			});
 			return callthrough(mockName, configFn);
 		};
@@ -327,7 +330,6 @@
 				debug('quickmock: metadata for dependency', depName, 'is unknown');
 				if(metadata[constants.PREFIX + depName]){
 					debug('quickmock: switching dependency', depName, 'to its mocked version');
-					//depName = constants.PREFIX + depName;
 					depMeta = metadata[constants.PREFIX + depName];
 				}else{
 					throw new Error('quickmock: unknown dependency "' + depName + '"');
@@ -370,17 +372,6 @@
 			moduleNames.push(tempMockModule.name);
 		}
 		return ['ng','ngMock'].concat(moduleNames);
-	}
-
-	function getInvokeQueueForProvider(options){
-		var meta = metadata[options.providerName],
-			invokeQueue = angular.module(meta.moduleName)._invokeQueue;
-		angular.forEach(invokeQueue, function(queue){
-			log(queue[0], queue[1], Array.prototype.slice.call(queue[2]));
-			//log('config', queue[2][1][2], queue[2][1][2] === meta.configFn);
-		});
-		//log(invokeQueue);
-		return invokeQueue;
 	}
 
 	function debug(){
