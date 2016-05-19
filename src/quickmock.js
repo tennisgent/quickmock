@@ -43,6 +43,8 @@
 
 	quickmock.USE_ACTUAL = 'USE_ACTUAL';
 
+	quickmock._metadata = metadata;
+
 	quickmock.setLogMode = function quickmockSetDebugMode(mode){
 		if(quickmock.log[mode]){
 			logMode = mode;
@@ -145,6 +147,17 @@
 		};
 
 		return directive;
+	}
+
+	function handleDirectiveMocks(dirsToMock){
+		var mod = angular.module('quickmockDirectiveMocks_' + new Date().getTime(), []);
+		angular.forEach(dirsToMock, function(directiveName){
+			mod.factory(directiveName + 'Directive', function(){
+				return {};
+			});
+			console.log('mocked out ' + directiveName);
+		});
+		return mod;
 	}
 
 	function moduleWrapper(modName, requires, configFn){
@@ -266,7 +279,7 @@
 				throwError('QUICKMOCK: cannot define mock spy for "' + name + '" because window.jasmine.createSpy is not a function');
 			}
 			return callthrough(name, function(){
-				var spy = jasmine.createSpy(name),
+				var spy = window.jasmine.createSpy(name),
 					callbackResult = null;
 				if(angular.isFunction(optionalCallback)){
 					callbackResult = optionalCallback(spy);
@@ -282,7 +295,7 @@
 				throwError('QUICKMOCK: cannot define mock spy object for "' + name + '" because window.jasmine.createSpyObj is not a function');
 			}
 			return callthrough(name, function(){
-				var spyObj = jasmine.createSpyObj(name, methods),
+				var spyObj = window.jasmine.createSpyObj(name, methods),
 					callbackResult = null;
 				if(angular.isFunction(optionalCallback)){
 					callbackResult = optionalCallback(spyObj);
@@ -357,7 +370,7 @@
 	}
 
 	function getAllModuleNames(options){
-		var moduleNames = [];
+		var moduleNames = ['ng','ngMock'];
 		if(options.moduleNames){
 			moduleNames = moduleNames.concat(options.moduleNames);
 		}
@@ -371,7 +384,11 @@
 			var tempMockModule = handleTemporaryMocks(options.mocks);
 			moduleNames.push(tempMockModule.name);
 		}
-		return ['ng','ngMock'].concat(moduleNames);
+		if(angular.isArray(options.directivesToMock)){
+			var directiveMocksModule = handleDirectiveMocks(options.directivesToMock);
+			moduleNames.push(directiveMocksModule.name);
+		}
+		return moduleNames;
 	}
 
 	function debug(){
