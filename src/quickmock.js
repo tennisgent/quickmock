@@ -141,17 +141,25 @@
 				throwError('QUICKMOCK: Cannot compile "', options.providerName, '" directive. No html string provided.');
 			}
 			directive.$element = angular.element(html);
+
 			meta.configFn.$inject = meta.mockedDependencies;
+			if(meta.controllerName){
+				metadata[meta.controllerName].configFn.$inject = meta.controllerMockedDependencies;
+			}
+
 			$compile(directive.$element)(directive.$scope);
+
 			meta.configFn.$inject = meta.dependencies;
+			if(meta.controllerName){
+				metadata[meta.controllerName].configFn.$inject = meta.controllerDependencies;
+			}
+
 			directive.$isoScope = directive.$element.isolateScope();
 			directive.$ctrl = directive.$element.controller(options.providerName);
 			(directive.$isoScope || directive.$scope).$digest();
 
 			if(meta.controllerDependencies){
-				console.log(meta.mocks);
 				setupProviderMocks(meta.controllerDependencies, meta.controllerMockedDependencies, meta, options);
-				console.log(meta.mocks);
 			}
 		};
 
@@ -241,20 +249,30 @@
 
 	function wrapDirectiveDefinitionObject(name, configFn){
 		return function directiveDefinition(){
-			var result = configFn.apply(configFn, arguments);
-			if(angular.isArray(result.controller) || angular.isFunction(result.controller)){
-				var ctrlFn = angular.isArray(result.controller) ? result.controller[result.controller.length-1] : result.controller;
-				var deps = $injector.annotate(ctrlFn),
-					mockedDeps = angular.copy(deps)
-						.map(function(dep){
-							return constants.PREFIX + dep;
-						});
-				metadata[name].dependencies = metadata[name].dependencies.concat(deps);
-				metadata[name].mockedDependencies = metadata[name].mockedDependencies.concat(mockedDeps);
-				metadata[name].controllerDependencies = deps;
-				metadata[name].controllerMockedDependencies = mockedDeps;
-				mockedDeps.push(ctrlFn);
-				result.controller = mockedDeps;
+			var result = configFn.apply(configFn, arguments),
+				meta = metadata[name];
+			if(result.controller){
+				if(angular.isString(result.controller)){
+					var ctrlMeta = metadata[result.controller];
+					meta.dependencies = meta.dependencies.concat(ctrlMeta.dependencies);
+					meta.mockedDependencies = meta.mockedDependencies.concat(ctrlMeta.mockedDependencies);
+					meta.controllerName = result.controller;
+					meta.controllerDependencies = ctrlMeta.dependencies;
+					meta.controllerMockedDependencies = ctrlMeta.mockedDependencies;
+				}else{
+					var ctrlFn = angular.isArray(result.controller) ? result.controller[result.controller.length - 1] : result.controller,
+						deps = $injector.annotate(ctrlFn),
+						mockedDeps = angular.copy(deps)
+							.map(function(dep){
+								return constants.PREFIX + dep;
+							});
+					meta.dependencies = meta.dependencies.concat(deps);
+					meta.mockedDependencies = meta.mockedDependencies.concat(mockedDeps);
+					meta.controllerDependencies = deps;
+					meta.controllerMockedDependencies = angular.copy(mockedDeps);
+					mockedDeps.push(ctrlFn);
+					result.controller = mockedDeps;
+				}
 			}
 			return result;
 		}
