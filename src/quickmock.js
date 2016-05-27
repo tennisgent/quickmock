@@ -27,7 +27,7 @@
 			run: 'run'
 		},
 		excludedProviders = {
-			//directive: 'directive',
+			directive: 'directive',
 			//component: 'component',
 			value: 'value',
 			constant: 'constant',
@@ -69,13 +69,14 @@
 		var meta = metadata[options.providerName];
 		meta.mocks = {};
 
-		setupProviderMocks(meta, options);
+		setupProviderMocks(meta.dependencies, meta.mockedDependencies, meta, options);
 
 		if(angular.isFunction(options.beforeInit)){
 			options.beforeInit(meta.mocks);
 		}
 
 		var provider = initProviderForTesting(options.providerName, options);
+
 		provider.$mocks = meta.mocks;
 
 		return provider;
@@ -92,6 +93,7 @@
 	}
 
 	function initProvider(providerName, options){
+		if(!providerName) return;
 		var meta = metadata[providerName];
 		if(!meta){
 			throwError('QUICKMOCK: unknown provider', providerName);
@@ -143,28 +145,25 @@
 			$compile(directive.$element)(directive.$scope);
 			meta.configFn.$inject = meta.dependencies;
 			directive.$isoScope = directive.$element.isolateScope();
+			directive.$ctrl = directive.$element.controller(options.providerName);
 			(directive.$isoScope || directive.$scope).$digest();
+
+			if(meta.controllerDependencies){
+				console.log(meta.mocks);
+				setupProviderMocks(meta.controllerDependencies, meta.controllerMockedDependencies, meta, options);
+				console.log(meta.mocks);
+			}
 		};
 
 		return directive;
-	}
-
-	function handleDirectiveMocks(dirsToMock){
-		var mod = angular.module('quickmockDirectiveMocks_' + new Date().getTime(), []);
-		angular.forEach(dirsToMock, function(directiveName){
-			mod.factory(directiveName + 'Directive', function(){
-				return {};
-			});
-			console.log('mocked out ' + directiveName);
-		});
-		return mod;
 	}
 
 	function moduleWrapper(modName, requires, configFn){
 		if(modName === 'ng') return false;
 		var mod = origModuleFn(modName, requires, configFn),
 			origValue = mod.value,
-			origConstant = mod.constant;
+			origConstant = mod.constant,
+			origDirective = mod.directive;
 
 		angular.forEach(providers, function(methodName){
 			if(!excludedProviders[methodName] && angular.isFunction(mod[methodName])){
@@ -178,6 +177,8 @@
 		});
 
 		mod.useActual = wrapProviderActualImplementation(mod.mockFactory);
+
+		mod.directive = wrapDirectiveDefinition('directive', origDirective, mod);
 
 		mod.mockValue = wrapProviderMockDefinition('value', origValue, mod);
 		mod.mockConstant = wrapProviderMockDefinition('constant', origConstant, mod);
@@ -212,6 +213,51 @@
 
 			return callthrough(name, configFn);
 		};
+	}
+
+	function wrapDirectiveDefinition(methodName, callthrough, module){
+		return function directiveDefinition(name, configFn){
+			var deps = $injector.annotate(configFn),
+				mockedDeps = angular.copy(deps)
+					.map(function(dep){
+						return constants.PREFIX + dep;
+					});
+			configFn = angular.isArray(configFn) ? configFn[configFn.length-1] : configFn;
+			angular.extend(metadata[name] = metadata[name] || {}, {
+				name: name,
+				type: methodName,
+				moduleName: module.name,
+				dependencies: deps,
+				mockedDependencies: mockedDeps,
+				configFn: configFn,
+				mockName: constants.PREFIX + name
+			});
+
+			var wrapper = wrapDirectiveDefinitionObject(name, configFn);
+			wrapper.$inject = deps;
+			return callthrough(name, wrapper);
+		};
+	}
+
+	function wrapDirectiveDefinitionObject(name, configFn){
+		return function directiveDefinition(){
+			var result = configFn.apply(configFn, arguments);
+			if(angular.isArray(result.controller) || angular.isFunction(result.controller)){
+				var ctrlFn = angular.isArray(result.controller) ? result.controller[result.controller.length-1] : result.controller;
+				var deps = $injector.annotate(ctrlFn),
+					mockedDeps = angular.copy(deps)
+						.map(function(dep){
+							return constants.PREFIX + dep;
+						});
+				metadata[name].dependencies = metadata[name].dependencies.concat(deps);
+				metadata[name].mockedDependencies = metadata[name].mockedDependencies.concat(mockedDeps);
+				metadata[name].controllerDependencies = deps;
+				metadata[name].controllerMockedDependencies = mockedDeps;
+				mockedDeps.push(ctrlFn);
+				result.controller = mockedDeps;
+			}
+			return result;
+		}
 	}
 
 	function wrapConfigOrRunBlock(configOrRun, module){
@@ -336,8 +382,18 @@
 		return mod;
 	}
 
-	function setupProviderMocks(meta, options){
-		angular.forEach(meta.dependencies, function(depName, i){
+	function handleDirectiveMocks(dirsToMock){
+		var mod = angular.module('quickmockDirectiveMocks_' + new Date().getTime(), []);
+		angular.forEach(dirsToMock, function(directiveName){
+			mod.factory(directiveName + 'Directive', function(){
+				return {};
+			});
+		});
+		return mod;
+	}
+
+	function setupProviderMocks(dependencies, mockedDependencies, meta, options){
+		angular.forEach(dependencies, function(depName, i){
 			var depMeta = metadata[depName];
 			if(!depMeta){
 				debug('quickmock: metadata for dependency', depName, 'is unknown');
@@ -351,20 +407,20 @@
 			if(options.mocks && depMeta.tempMock){
 				debug('quickmock: setting mock for', options.providerName, 'from "' + depName + '" to "' + depMeta.tempMockName + '"');
 				meta.mocks[depName] = depMeta.tempMock;
-				meta.mockedDependencies[i] = depMeta.tempMockName;
+				mockedDependencies[i] = depMeta.tempMockName;
 			}else if(depMeta.type === providers.value || depMeta.type === providers.constant){
 				if($injector.has(depMeta.mockName)){
-					debug('quickmock: setting mock for', options.providerName, depMeta.type, 'as "' + meta.mockedDependencies[i] + '"');
-					meta.mocks[depName] = initProvider(meta.mockedDependencies[i], options);
+					debug('quickmock: setting mock for', options.providerName, depMeta.type, 'as "' + mockedDependencies[i] + '"');
+					meta.mocks[depName] = initProvider(mockedDependencies[i], options);
 				}else if($injector.has(depName)){
-					debug('quickmock: setting mock for', options.providerName, depMeta.type, 'from "' + meta.mockedDependencies[i] + '" to "' + depName + '" because no mock exists');
-					meta.mocks[depName] = initProvider(meta.mockedDependencies[i] = depName, options);
+					debug('quickmock: setting mock for', options.providerName, depMeta.type, 'from "' + mockedDependencies[i] + '" to "' + depName + '" because no mock exists');
+					meta.mocks[depName] = initProvider(mockedDependencies[i] = depName, options);
 				}else{
 					throwError('QUICKMOCK: no', depMeta.type, 'mock named "' + depName + '" was found');
 				}
 			}else{
-				debug('quickmock: setting mock for', options.providerName, 'from "' + depName + '" to "' +  meta.mockedDependencies[i] + '"');
-				meta.mocks[depName] = initProvider(meta.mockedDependencies[i], options);
+				debug('quickmock: setting mock for', options.providerName, 'from "' + depName + '" to "' +  mockedDependencies[i] + '"');
+				meta.mocks[depName] = initProvider(mockedDependencies[i], options);
 			}
 		});
 	}
