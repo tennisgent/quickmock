@@ -37,7 +37,7 @@ describe('Nested Directives', function () {
 
 });
 
-fdescribe('Anonymous Controller Directives', function () {
+describe('Anonymous Controller Directives', function () {
     var myDirective;
 
     angular.module('DirectivesTestModule2', [])
