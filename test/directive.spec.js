@@ -84,16 +84,19 @@ describe('Anonymous Controller Directives', function () {
         it('should have a "SomeService" mock available', function () {
             expect(myDirective.$mocks.SomeService).toBeDefined();
             expect(myDirective.$mocks.SomeService.doSomething).toEqual(jasmine.any(Function));
+            expect(myDirective.$mocks.SomeService.doSomething.and.returnValue).toEqual(jasmine.any(Function));
         });
 
         it('should have a "SomeService2" mock available', function () {
             expect(myDirective.$mocks.SomeService2).toBeDefined();
             expect(myDirective.$mocks.SomeService2.doSomething2).toEqual(jasmine.any(Function));
+            expect(myDirective.$mocks.SomeService2.doSomething2.and.returnValue).toEqual(jasmine.any(Function));
         });
 
         it('should have a "SomeOtherService" mock available', function () {
             expect(myDirective.$mocks.SomeOtherService).toBeDefined();
             expect(myDirective.$mocks.SomeOtherService.doSomethingElse).toEqual(jasmine.any(Function));
+            expect(myDirective.$mocks.SomeOtherService.doSomethingElse.and.returnValue).toEqual(jasmine.any(Function));
         });
 
         it('should call doSomething() when clicked', function () {
@@ -185,6 +188,60 @@ describe('Anonymous Controller Directives (x2)', function () {
             expect(myDirective.$mocks.SomeServiceX.doSomethingMore).not.toHaveBeenCalled();
             myDirective.$element[0].click();
             expect(myDirective.$mocks.SomeServiceX.doSomethingMore).toHaveBeenCalledWith(1);
+        });
+
+    });
+
+});
+
+describe('Mixed Controller Directives', function () {
+    var myDirective;
+
+    angular.module('DirectivesTestModule4', [])
+        .service('SomeServiceY', function(){
+            return { doSomethingMore: function(){} };
+        })
+        .service('SomeOtherServiceY', function(){
+            return { doSomethingElse: function(){} };
+        })
+        .mockServiceSpyObj('SomeServiceY', ['doSomethingMore'])
+        .mockServiceSpyObj('SomeOtherServiceY', ['doSomethingElse'])
+        .directive('myDirectiveY', function (SomeOtherServiceY) {
+            return {
+                restrict: 'E',
+                replace: true,
+                template: '<div ng-click="vm.incCount()">Cool Directive</div>',
+                controller: function(SomeServiceY){
+                    var vm = this;
+                    vm.count = 0;
+                    vm.incCount = function(){
+                        vm.count++;
+                        SomeServiceY.doSomethingMore(vm.count);
+                    };
+                },
+                controllerAs: 'vm'
+            };
+        });
+
+    beforeEach(function () {
+        myDirective = quickmock({
+            providerName: 'myDirectiveY',
+            moduleNames: ['DirectivesTestModule4'],
+            html: '<my-directive-y></my-directive-y>'
+        });
+        myDirective.$compile();
+    });
+
+    describe('myDirective', function () {
+
+        it('should have a "SomeServiceY" mock available', function () {
+            expect(myDirective.$mocks.SomeServiceY).toBeDefined();
+            expect(myDirective.$mocks.SomeServiceY.doSomethingMore).toEqual(jasmine.any(Function));
+        });
+
+        it('should have a "SomeOtherServiceY" mock available', function () {
+            expect(myDirective.$mocks.SomeOtherServiceY).toBeDefined();
+            expect(myDirective.$mocks.SomeOtherServiceY.doSomethingElse).toEqual(jasmine.any(Function));
         });
 
     });

@@ -143,6 +143,7 @@
 			directive.$element = angular.element(html);
 
 			meta.configFn.$inject = meta.mockedDependencies;
+
 			if(meta.controllerName){
 				metadata[meta.controllerName].configFn.$inject = meta.controllerMockedDependencies;
 			}
@@ -253,25 +254,9 @@
 				meta = metadata[name];
 			if(result.controller){
 				if(angular.isString(result.controller)){
-					var ctrlMeta = metadata[result.controller];
-					meta.dependencies = meta.dependencies.concat(ctrlMeta.dependencies);
-					meta.mockedDependencies = meta.mockedDependencies.concat(ctrlMeta.mockedDependencies);
-					meta.controllerName = result.controller;
-					meta.controllerDependencies = ctrlMeta.dependencies;
-					meta.controllerMockedDependencies = ctrlMeta.mockedDependencies;
+					handleNamedDirectiveController(result, meta);
 				}else{
-					var ctrlFn = angular.isArray(result.controller) ? result.controller[result.controller.length - 1] : result.controller,
-						deps = $injector.annotate(ctrlFn),
-						mockedDeps = angular.copy(deps)
-							.map(function(dep){
-								return constants.PREFIX + dep;
-							});
-					meta.dependencies = meta.dependencies.concat(deps);
-					meta.mockedDependencies = meta.mockedDependencies.concat(mockedDeps);
-					meta.controllerDependencies = deps;
-					meta.controllerMockedDependencies = angular.copy(mockedDeps);
-					mockedDeps.push(ctrlFn);
-					result.controller = mockedDeps;
+					handleAnonymousDirectiveController(result, meta);
 				}
 			}
 			return result;
@@ -383,6 +368,37 @@
 		}
 	}
 
+	function handleNamedDirectiveController(result, meta){
+		var ctrlName = result.controller;
+		if(ctrlName.indexOf(' as ') !== -1){
+			ctrlName = ctrlName.slice(0, ctrlName.indexOf(' as '));
+		}
+		var ctrlMeta = metadata[ctrlName];
+		if(!ctrlMeta){
+			throwError('quickmock: unknown controller "' + ctrlName + '" for directive "' + name + '"');
+		}
+		meta.dependencies = meta.dependencies.concat(ctrlMeta.dependencies);
+		meta.mockedDependencies = meta.mockedDependencies.concat(ctrlMeta.mockedDependencies);
+		meta.controllerName = ctrlName;
+		meta.controllerDependencies = ctrlMeta.dependencies;
+		meta.controllerMockedDependencies = ctrlMeta.mockedDependencies;
+	}
+
+	function handleAnonymousDirectiveController(result, meta){
+		var ctrlFn = angular.isArray(result.controller) ? result.controller[result.controller.length - 1] : result.controller,
+			deps = $injector.annotate(ctrlFn),
+			mockedDeps = angular.copy(deps)
+				.map(function(dep){
+					return constants.PREFIX + dep;
+				});
+		meta.dependencies = meta.dependencies.concat(deps);
+		meta.mockedDependencies = meta.mockedDependencies.concat(mockedDeps);
+		meta.controllerDependencies = deps;
+		meta.controllerMockedDependencies = angular.copy(mockedDeps);
+		mockedDeps.push(ctrlFn);
+		result.controller = mockedDeps;
+	}
+
 	function handleTemporaryMocks(mocks){
 		var mod = angular.module('quickmockTempMocks_' + new Date().getTime(), []);
 		angular.forEach(mocks, function(mock, name){
@@ -419,7 +435,7 @@
 					debug('quickmock: switching dependency', depName, 'to its mocked version');
 					depMeta = metadata[constants.PREFIX + depName];
 				}else{
-					throw new Error('quickmock: unknown dependency "' + depName + '"');
+					throwError('quickmock: unknown dependency "' + depName + '"');
 				}
 			}
 			if(options.mocks && depMeta.tempMock){
