@@ -146,20 +146,26 @@
 	}
 
 	function sanitizeProvider(providerData, injector){
-		if(angular.isString(providerData[2][0]) && providerData[2][0].indexOf(mockPrefix) === -1){
-			if(angular.isFunction(providerData[2][1])){
+		var providerType = providerData[1];
+		var providerName = providerData[2][0];
+		var providerDependencies = providerData[2][1];
+		if(angular.isString(providerName) && providerName.indexOf(mockPrefix) === -1){
+			if(angular.isFunction(providerDependencies)){
 				// provider declaration function has been provided without the array annotation,
 				// so we need to annotate it so the invokeQueue can be prefixed
-				var annotatedDependencies = injector.annotate(providerData[2][1]);
-				delete providerData[2][1].$inject;
-				annotatedDependencies.push(providerData[2][1]);
+				var annotatedDependencies = injector.annotate(providerDependencies);
+				delete providerDependencies.$inject;
+				annotatedDependencies.push(providerDependencies);
 				providerData[2][1] = annotatedDependencies;
 			}
-			var currProviderDeps = providerData[2][1];
-			if(angular.isArray(currProviderDeps)){
-				for(var i=0; i<currProviderDeps.length - 1; i++){
-					if(currProviderDeps[i].indexOf(mockPrefix) === 0){
-						currProviderDeps[i] = currProviderDeps[i].replace(mockPrefix, '');
+			providerDependencies = providerData[2][1];
+			if(angular.isArray(providerDependencies) && providerType !== 'constant' && providerType !== 'value'){
+				// We don't want this code getting run if the provider is a constant or value, because an array is valid
+				// as a constant or value. Constants and values do *not* use the array syntax for dependencies, because
+				// they can't take dependencies.
+				for(var i=0; i<providerDependencies.length - 1; i++){
+					if(providerDependencies[i].indexOf(mockPrefix) === 0){
+						providerDependencies[i] = providerDependencies[i].replace(mockPrefix, '');
 					}
 				}
 			}
